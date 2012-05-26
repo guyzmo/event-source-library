@@ -9,15 +9,31 @@ def send_json(url, data):
         data = json.dumps(json.loads(data))
     else:
         data = json.dumps(data)
-    req = urllib2.Request(url, data, {'Content-Type': 'application/json'})
-    f = urllib2.urlopen(req)
-    response = f.read()
-    f.close()
+    try:
+        req = urllib2.Request(url, data, {'Content-Type': 'application/json'})
+        f = urllib2.urlopen(req)
+        try:
+            response = f.read()
+            print response
+            return 0
+        finally:
+            f.close()
+    except urllib2.HTTPError, err:
+        print "Unable to send request: %s" % (err,)
+        return 1
 
 def send_string(url, data):
-    f = urllib2.urlopen(url, data)
-    response = f.read()
-    f.close()
+    try:
+        f = urllib2.urlopen(url, data)
+        try:
+            response = f.read()
+            print response
+            return 0
+        finally:
+            f.close()
+    except urllib2.HTTPError, err:
+        print "Unable to send request: %s" % (err,)
+        return 1
     
 def start():
     parser = argparse.ArgumentParser(prog=sys.argv[0],
@@ -55,9 +71,9 @@ def start():
     args = parser.parse_args(sys.argv[1:])
 
     if args.json:
-        send_json("http://%(host)s:%(port)s/%(action)s/%(token)s" % args.__dict__, args.data)
+        sys.exit( send_json("http://%(host)s:%(port)s/%(action)s/%(token)s" % args.__dict__, args.data) )
     else:
-        send_string("http://%(host)s:%(port)s/%(action)s/%(token)s" % args.__dict__, args.data)
+        sys.exit( send_string("http://%(host)s:%(port)s/%(action)s/%(token)s" % args.__dict__, args.data) )
 
 if __name__ == "__main__":
     start()
