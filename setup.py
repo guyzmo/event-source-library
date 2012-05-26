@@ -15,7 +15,7 @@ def read(*names):
     return values
 
 long_description="""
-%(README)s
+%(README.md)s
 
 See http://packages.python.org/eventsource/ for the full documentation
 
@@ -33,7 +33,6 @@ setup(name="eventsource",
       """,
       author="Bernard Pratz",
       author_email="guyzmo@hackable-devices.org",
-      url="",
       install_requires = [
           'tornado'
       ],
@@ -51,8 +50,8 @@ setup(name="eventsource",
       entry_points="""
       # -*- Entry points: -*-
       [console_scripts]
-      eventsource-server = eventsource.server.start
-      eventsource-client = eventsource.client.start
-      eventsource-request = eventsource.request.start
+      eventsource-server = eventsource.listener:start
+      eventsource-client = eventsource.client:start
+      eventsource-request = eventsource.request:start
       """,
       )
