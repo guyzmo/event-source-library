@@ -6,25 +6,29 @@ import sys, os
 def read(*names):
     values = dict()
     for name in names:
-        filename = name+'.txt'
-        if os.path.isfile(filename):
-            value = open(name+'.txt').read()
+        for ext in ['.txt','.md','.rst','']:
+            filename = name+ext
+            print filename
+            if os.path.isfile(filename):
+                value = open(filename).read()
+                break
         else:
             value = ''
         values[name] = value
     return values
 
 long_description="""
-%(README.md)s
+%(README)s
 
 See http://packages.python.org/eventsource/ for the full documentation
+See https://github.com/guyzmo/event-source-library for latest sources and for patches
 
 News
 ====
 
 %(CHANGES)s
 
-""" % read('README.md', 'CHANGES')
+""" % read('README', 'CHANGES')
 
 setup(name="eventsource",
       version="1.0",
