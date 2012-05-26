@@ -8,7 +8,6 @@ def read(*names):
     for name in names:
         for ext in ['.txt','.md','.rst','']:
             filename = name+ext
-            print filename
             if os.path.isfile(filename):
                 value = open(filename).read()
                 break
