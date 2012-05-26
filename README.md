@@ -18,55 +18,59 @@ Usage
 
  1. Launch the server:
     
-        python event_source/event_source_listener.py -P 8888 -i -k 50000
+    python eventsource/listener.py -P 8888 -i -k 50000
 
  2. Launch the client:
 
-        python event_source/event_source_client.py 42 -r 5000
+    python eventsource/client.py 69:69:69:69:69:69 -r 5000
 
  3. Send requests:
 
-        python event_source/send_request.py 42 ping "42"
-        python event_source/send_request.py 42 close
+    python eventsource/send_request.py 69:69:69:69:69:69 ping "42"
+    python eventsource/send_request.py 69:69:69:69:69:69 close
 
 Command Line arguments
 ======================
 
- - event_source_listener:
+ - eventsource/listener.py:
 
-        usage: event_source/event_source_listener.py [-h] [-H HOST] [-P PORT] [-d]
-                                                    [-j] [-k KEEPALIVE] [-i]
-        
-        Event Source Listener
-        
-        optional arguments:
-        -h, --help                             show this help message and exit
-        -H HOST, --host HOST                   Host to bind on
-        -P PORT, --port PORT                   Port to bind on
-        -d, --debug                            enables debug output
-        -j, --json                             to enable JSON Event
-        -k KEEPALIVE, --keepalive KEEPALIVE    Keepalive timeout
-        -i, --id                               to generate identifiers
+    usage: eventsource/listener.py [-h] [-H HOST] [-P PORT] [-d]
+                                                [-j] [-k KEEPALIVE] [-i]
 
- - event_source_client:
+    Event Source Listener
 
-        usage: event_source/event_source_client.py token [-h] [-H HOST] [-P PORT] [-d] [-r RETRY]
-        
-        Event Source Client
-        
-        positional arguments:
-        token                      Token to be used for connection
-    
-        optional arguments:
-        -h, --help                 show this help message and exit
-        -H HOST, --host HOST       Host to connect to
-        -P PORT, --port PORT       Port to be used connection
-        -d, --debug                enables debug output
-        -r RETRY, --retry RETRY    Reconnection timeout
+    optional arguments:
+    -h, --help            show this help message and exit
+    -H HOST, --host HOST  Host to bind on
+    -P PORT, --port PORT  Port to bind on
+    -d, --debug           enables debug output
+    -j, --json            to enable JSON Event
+    -k KEEPALIVE, --keepalive KEEPALIVE
+                            Keepalive timeout
+    -i, --id              to generate identifiers
+
+ - eventsource/client.py:
+
+    usage: eventsource/client.py [-h] [-H HOST] [-P PORT] [-d]
+                                            [-r RETRY]
+                                            token
+
+    Event Source Client
+
+    positional arguments:
+    token                 Token to be used for connection
+
+    optional arguments:
+    -h, --help            show this help message and exit
+    -H HOST, --host HOST  Host to connect to
+    -P PORT, --port PORT  Port to be used connection
+    -d, --debug           enables debug output
+    -r RETRY, --retry RETRY
+                            Reconnection timeout
 
  - send_request:
 
-    usage: event_source/send_request.py [-h] [-H HOST] [-P PORT] [-j]
+    usage: eventsource/send_request.py [-h] [-H HOST] [-P PORT] [-j]
                                         token action [data]
 
     Generates event for Event Source Library
@@ -88,10 +92,10 @@ Integrate
 
 On the server side, basically all you have to do is to add the following to your code:
 
-    from event_source import event_source_listener
+    from eventsource import listener
 
     application = tornado.web.Application([
-        (r"/(.*)/(.*)", event_source_listener.EventSourceHandler, 
+        (r"/(.*)/(.*)", listener.EventSourceHandler, 
                                           dict(event_class=EVENT,
                                                keepalive=KEEPALIVE)),
     ])
@@ -102,22 +106,22 @@ On the server side, basically all you have to do is to add the following to your
 where:
  - PORT is an integer for the port to bind to
  - KEEPALIVE is an integer for the timeout between two keepalive messages (to protect from disconnections)
- - EVENT is a event_source_listener.Event based class, either one you made or 
-    - event_source_listener.StringEvent : Each event gets and resends multiline strings
-    - event_source_listener.StringIdEvent : Each event gets and resends multiline strings, with an unique id for each event
-    - event_source_listener.JSONEvent : Each event gets and resends JSON valid strings
-    - event_source_listener.JSONIdEvent : Each event gets and resends JSON valid string, with an unique id for each event
+ - EVENT is a eventsource.listener.Event based class, either one you made or 
+    - eventsource.listener.StringEvent : Each event gets and resends multiline strings
+    - eventsource.listener.StringIdEvent : Each event gets and resends multiline strings, with an unique id for each event
+    - eventsource.listener.JSONEvent : Each event gets and resends JSON valid strings
+    - eventsource.listener.JSONIdEvent : Each event gets and resends JSON valid string, with an unique id for each event
 
 Extend
 ======
 
-To extend the behaviour of the event source library, without breaking event_source
+To extend the behaviour of the event source library, without breaking eventsource
 definition, the Event based classes implements all processing elements that shall
 be done on events. 
 
 There is two abstract classes that defines Event:
- - event_source_listener.Event : defines the constructor of an Event
- - event_source_listener.EventId : defines an always incrementing id handler
+ - eventsource.listener.Event : defines the constructor of an Event
+ - eventsource.listener.EventId : defines an always incrementing id handler
 
 here is an example to create a new Event that takes multiline data and join it in a one
 line string seperated with semi-colons.
@@ -166,7 +170,6 @@ Python Event Source Library
 
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 3 of the License.
 This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
-You should have received a copy of the GNU General Public License along with this program (See LICENSE file in current directory). 
-If not, see http://www.gnu.org/licenses/.
+You should have received a copy of the GNU General Public License along with this program. If not, see http://www.gnu.org/licenses/.
 
 EOF
