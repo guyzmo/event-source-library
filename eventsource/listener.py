@@ -1,7 +1,15 @@
-# resources:
-# * http://stackoverflow.com/questions/10665569/websocket-event-source-implementation-to-expose-a-two-way-rpc-to-a-python-dj
-# * http://stackoverflow.com/questions/8812715/using-a-simple-python-generator-as-a-co-routine-in-a-tornado-async-handler
-# * http://dev.w3.org/html5/eventsource/#event-stream-interpretation
+"""
+.. module:: listener 
+:platform: Unix
+:synopsis: This module provides an eventsource listener based on tornado
+
+.. moduleauthor:: Bernard Pratz <guyzmo@hackable-devices.org>
+
+.. resources::
+ * http://stackoverflow.com/questions/10665569/websocket-event-source-implementation-to-expose-a-two-way-rpc-to-a-python-dj
+ * http://stackoverflow.com/questions/8812715/using-a-simple-python-generator-as-a-co-routine-in-a-tornado-async-handler
+ * http://dev.w3.org/html5/eventsource/#event-stream-interpretation
+"""
 
 import sys
 import time
@@ -49,9 +57,9 @@ class Event(object):
     def __init__(self, target, action, value=None):
         """
         Creates a new Event object with
-        @param target a string matching an open channel
-        @param action a string matching an action in the ACTIONS list
-        @param value a value to be embedded
+        :param target: a string matching an open channel
+        :param action: a string matching an action in the ACTIONS list
+        :param value: a value to be embedded
         """
         self.target = target
         self.action = action
@@ -132,7 +140,7 @@ class EventSourceHandler(tornado.web.RequestHandler):
     def push(self, event):
         """
         For a given event, write event-source outputs on current handler
-        @param event Event based incoming event
+        :param event: Event based incoming event
         """
         log.debug("push(%s,%s,%s)" % (event.id,event.action,event.value))
         if hasattr(event, "id"):
@@ -150,15 +158,15 @@ class EventSourceHandler(tornado.web.RequestHandler):
         """
         creates and store an event for the target
 
-        @param target string identifying current target
-        @param action string matching one of Event.ACTIONS
-        @param value string containing a value
+        :param target: string identifying current target
+        :param action: string matching one of Event.ACTIONS
+        :param value: string containing a value
         """
         self._events[target].append(self._event_class(target, action, value))
 
     def is_connected(self, target):
         """
-        @param target string identifying a given target
+        :param target: string identifying a given target
         @return true if target is connected
         """
         return target in self._connected.values()
@@ -167,7 +175,7 @@ class EventSourceHandler(tornado.web.RequestHandler):
         """
         registers target as being connected
 
-        @param target string identifying a given target
+        :param target: string identifying a given target
 
         this method will add target to the connected list, 
         and create an empty event buffer
@@ -224,8 +232,8 @@ class EventSourceHandler(tornado.web.RequestHandler):
         """
         Triggers an event
 
-        @param action string defining the type of event
-        @param target string defining the target handler to send it to
+        :param action: string defining the type of event
+        :param target: string defining the target handler to send it to
 
         this method will look for the request body to get post's data.
         """

@@ -20,7 +20,15 @@ class Event(object):
         return "Event<%s,%s,%s>" % (str(self.id), str(self.name), str(self.data.replace('\n','\\n')))
 
 class EventSourceClient(object):
-    def __init__(self,url,action,target,callback=None,retry=-1):
+    def __init__(self,url,action,target,callback=None,retry=0):
+        """
+        Build the event source client
+        :param url: string, the url to connect to
+        :param action: string of the listening action to connect to
+        :param target: string with the listening token
+        :param callback: function with one parameter (Event) that gets called for each received event
+        :param retry: timeout between two reconnections (0 means no reconnection)
+        """
         self._url = "http://%s/%s/%s" % (url,action,target)
         AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient")
         self.http_client = AsyncHTTPClient()
@@ -36,6 +44,9 @@ class EventSourceClient(object):
         self.retry_timeout = int(retry)
 
     def poll(self):
+        """
+        Function to call to start listening
+        """
         if self.retry_timeout == 0:
             self.http_client.fetch(self.http_request, self.handle_request)
             IOLoop.instance().start()
@@ -45,10 +56,19 @@ class EventSourceClient(object):
             time.sleep(self.retry_timeout/1000)
 
     def end(self):
+        """
+        Function to call to end listening
+        """
         self.retry_timeout=0
         IOLoop.instance().stop()
     
     def handle_stream(self,message):
+        """
+        Acts on message reception
+        :param message: string of an incoming message
+
+        parse all the fields and builds an Event object that is passed to the callback function
+        """
         event = Event()
         for line in message.strip('\r\n').split('\r\n'):
             (field, value) = line.split(":",1)
@@ -77,6 +97,10 @@ class EventSourceClient(object):
                 
 
     def handle_request(self,response):
+        """
+        Function that gets called on non long-polling actions, 
+        on error or on end of polling.
+        """
         if response.error:
             log.error(response.error)
         else:
