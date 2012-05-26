@@ -160,4 +160,16 @@ To change the way events are generated, you can directly call EventSourceHandler
 to create a new event to be sent. But the post action is best, at least while WSGI can't handle
 correctly long polling connections.
 
+Licensing
+=========
+
+Python Event Source Library
+
+(c) 2012 Bernard Pratz
+(c) 2012 (CKAB) hackable:Devices
+
+This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 3 of the License.
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+You should have received a copy of the GNU General Public License along with this program. If not, see http://www.gnu.org/licenses/.
+
 EOF
