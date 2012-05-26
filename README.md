@@ -18,55 +18,51 @@ Usage
 
  1. Launch the server:
     
-    python event_source/event_source_listener.py -P 8888 -i -k 50000
+        python event_source/event_source_listener.py -P 8888 -i -k 50000
 
  2. Launch the client:
 
-    python event_source/event_source_client.py 69:69:69:69:69:69 -r 5000
+        python event_source/event_source_client.py 42 -r 5000
 
  3. Send requests:
 
-    python event_source/send_request.py 69:69:69:69:69:69 ping "42"
-    python event_source/send_request.py 69:69:69:69:69:69 close
+        python event_source/send_request.py 42 ping "42"
+        python event_source/send_request.py 42 close
 
 Command Line arguments
 ======================
 
  - event_source_listener:
 
-    usage: event_source/event_source_listener.py [-h] [-H HOST] [-P PORT] [-d]
-                                                [-j] [-k KEEPALIVE] [-i]
-
-    Event Source Listener
-
-    optional arguments:
-    -h, --help            show this help message and exit
-    -H HOST, --host HOST  Host to bind on
-    -P PORT, --port PORT  Port to bind on
-    -d, --debug           enables debug output
-    -j, --json            to enable JSON Event
-    -k KEEPALIVE, --keepalive KEEPALIVE
-                            Keepalive timeout
-    -i, --id              to generate identifiers
+        usage: event_source/event_source_listener.py [-h] [-H HOST] [-P PORT] [-d]
+                                                    [-j] [-k KEEPALIVE] [-i]
+        
+        Event Source Listener
+        
+        optional arguments:
+        -h, --help                             show this help message and exit
+        -H HOST, --host HOST                   Host to bind on
+        -P PORT, --port PORT                   Port to bind on
+        -d, --debug                            enables debug output
+        -j, --json                             to enable JSON Event
+        -k KEEPALIVE, --keepalive KEEPALIVE    Keepalive timeout
+        -i, --id                               to generate identifiers
 
  - event_source_client:
 
-    usage: event_source/event_source_client.py [-h] [-H HOST] [-P PORT] [-d]
-                                            [-r RETRY]
-                                            token
-
-    Event Source Client
-
-    positional arguments:
-    token                 Token to be used for connection
-
-    optional arguments:
-    -h, --help            show this help message and exit
-    -H HOST, --host HOST  Host to connect to
-    -P PORT, --port PORT  Port to be used connection
-    -d, --debug           enables debug output
-    -r RETRY, --retry RETRY
-                            Reconnection timeout
+        usage: event_source/event_source_client.py token [-h] [-H HOST] [-P PORT] [-d] [-r RETRY]
+        
+        Event Source Client
+        
+        positional arguments:
+        token                      Token to be used for connection
+    
+        optional arguments:
+        -h, --help                 show this help message and exit
+        -H HOST, --host HOST       Host to connect to
+        -P PORT, --port PORT       Port to be used connection
+        -d, --debug                enables debug output
+        -r RETRY, --retry RETRY    Reconnection timeout
 
  - send_request:
 
@@ -170,6 +166,7 @@ Python Event Source Library
 
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 3 of the License.
 This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
-You should have received a copy of the GNU General Public License along with this program. If not, see http://www.gnu.org/licenses/.
+You should have received a copy of the GNU General Public License along with this program (See LICENSE file in current directory). 
+If not, see http://www.gnu.org/licenses/.
 
 EOF
