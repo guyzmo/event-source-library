@@ -28,14 +28,18 @@ class Event(object):
     """
     Class that defines an event, its behaviour and the matching actions
 
-    LISTEN is the GET event that will open an event source communication
-    FINISH is the POST event that will end an event source communication started by LISTEN
-    RETRY is the POST event that defines reconnection timeouts for the client
-    ACTIONS contains the list of acceptable POST targets.
+    Fields defined by base Event:
+    - **target** is the token that matches an event source channel
+    - **action** contains the name of the action (which shall be in ACTIONS)
+    - **value** contains a list of every lines of the value to be parsed
 
-    target is the token that matches an event source channel
-    action contains the name of the action (which shall be in ACTIONS)
-    value contains a list of every lines of the value to be parsed
+    content_type field is the Accept header value that is returned on new connections
+
+    Actions defined in base Event:
+    - **LISTEN** is the GET event that will open an event source communication
+    - **FINISH** is the POST event that will end an event source communication started by LISTEN
+    - **RETRY** is the POST event that defines reconnection timeouts for the client
+    - **ACTIONS** contains the list of acceptable POST targets.
     """
     content_type = "text/plain"
 
@@ -44,14 +48,16 @@ class Event(object):
     RETRY = "retry"
     ACTIONS=[FINISH]
 
-    """Property to encapsulate processing on value"""
     def get_value(self):
         return self._value
 
     def set_value(self, v):
         self._value = v
 
+    """Property to encapsulate processing on value"""
     value = property(get_value,set_value)
+
+    """Sets default value for id"""
     id = None
 
     def __init__(self, target, action, value=None):
@@ -66,6 +72,11 @@ class Event(object):
         self.set_value(value)
 
 class EventId(object):
+    """
+    Class that defines an event with an id
+
+    - defines field "id", that can be set with "get_id"
+    """
     cnt = 0
     def get_id(self):
         if self.cnt == EventId.cnt:
