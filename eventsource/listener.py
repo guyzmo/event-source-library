@@ -5,10 +5,12 @@
 
 .. moduleauthor:: Bernard Pratz <guyzmo@hackable-devices.org>
 
-.. resources::
- * http://stackoverflow.com/questions/10665569/websocket-event-source-implementation-to-expose-a-two-way-rpc-to-a-python-dj
- * http://stackoverflow.com/questions/8812715/using-a-simple-python-generator-as-a-co-routine-in-a-tornado-async-handler
- * http://dev.w3.org/html5/eventsource/#event-stream-interpretation
+.. note::
+resources:
+    - http://stackoverflow.com/questions/10665569/websocket-event-source-implementation-to-expose-a-two-way-rpc-to-a-python-dj
+    - http://stackoverflow.com/questions/8812715/using-a-simple-python-generator-as-a-co-routine-in-a-tornado-async-handler
+    - http://dev.w3.org/html5/eventsource/#event-stream-interpretation
+    - http://github.com/guyzmo/event-source-library/
 """
 
 import sys
@@ -28,18 +30,18 @@ class Event(object):
     """
     Class that defines an event, its behaviour and the matching actions
 
-    Fields defined by base Event:
-    - **target** is the token that matches an event source channel
-    - **action** contains the name of the action (which shall be in ACTIONS)
-    - **value** contains a list of every lines of the value to be parsed
+    Members defined by base Event:
+        - **target** is the token that matches an event source channel
+        - **action** contains the name of the action (which shall be in `ACTIONS`)
+        - **value** contains a list of every lines of the value to be parsed
 
-    content_type field is the Accept header value that is returned on new connections
-
-    Actions defined in base Event:
-    - **LISTEN** is the GET event that will open an event source communication
-    - **FINISH** is the POST event that will end an event source communication started by LISTEN
-    - **RETRY** is the POST event that defines reconnection timeouts for the client
-    - **ACTIONS** contains the list of acceptable POST targets.
+    Static members:
+        - content_type field is the Accept header value that is returned on new connections
+        - **ACTIONS** contains the list of acceptable POST targets.
+        - Actions defined in base Event:
+            - **LISTEN** is the GET event that will open an event source communication
+            - **FINISH** is the POST event that will end a communication started by `LISTEN`
+            - **RETRY** is the POST event that defines reconnection timeouts for the client
     """
     content_type = "text/plain"
 
@@ -57,7 +59,6 @@ class Event(object):
     """Property to encapsulate processing on value"""
     value = property(get_value,set_value)
 
-    """Sets default value for id"""
     id = None
 
     def __init__(self, target, action, value=None):
@@ -74,36 +75,47 @@ class Event(object):
 class EventId(object):
     """
     Class that defines an event with an id
-
-    - defines field "id", that can be set with "get_id"
+        - defines field `id` using property, using method `get_id()`
     """
     cnt = 0
+
     def get_id(self):
+        """Method to create id generation behaviour"""
         if self.cnt == EventId.cnt:
             self.cnt = EventId.cnt
             EventId.cnt+=1
         return self.cnt
+
+    """Property to encapsulate processing on value"""
     id = property(get_id)
 
 """ Reusable events """
 
 class StringEvent(Event):
+    """
+    Class that defines a multiline string Event
+    - overloads `Event.get_value()`, and associates it using a property
+    - adds a "ping" event
+    """
     ACTIONS=["ping",Event.FINISH]
-
-    """Property to enable multiline output of the value"""
     def get_value(self):
         return [line for line in self._value.split('\n')]
 
     value = property(get_value,Event.set_value)
 
 class JSONEvent(Event):
+    """
+    Class that defines a JSON-checked Event
+    - overloads `Event.get_value()` and `Event.set_value()`, and associates it using a property
+    - adds a "ping" event
+    - defines content_type to `application/json`
+    """
     content_type = "application/json"
 
     LISTEN = "poll"
     FINISH = "close"
     ACTIONS=["ping",FINISH]
 
-    """Property to enable JSON checking of the value"""
     def get_value(self):
         return [json.dumps(self._value)]
 
@@ -113,11 +125,17 @@ class JSONEvent(Event):
     value = property(get_value,set_value)
 
 class StringIdEvent(StringEvent,EventId):
+    """
+    Class that defines a Multiline String Event with id generation
+    """
     ACTIONS=["ping",Event.RETRY,Event.FINISH]
 
     id = property(EventId.get_id)
 
 class JSONIdEvent(JSONEvent,EventId):
+    """
+    Class that defines a JSON-checked Event with id generation
+    """
     content_type = JSONEvent.content_type
     ACTIONS=["ping",Event.RETRY,Event.FINISH]
     
@@ -130,9 +148,11 @@ class EventSourceHandler(tornado.web.RequestHandler):
     _connected = {}
     _events = {}
 
-    def initialize(self, event_class=StringEvent,keepalive=0):
+    def initialize(self, event_class=StringEvent, keepalive=0):
         """
         Takes an Event based class to define the event's handling
+        :param event_class: defines the kind of event that is expected
+        :param keepalive: time lapse to wait for sending keepalive messages. If `0`, keepalive is deactivated.
         """
         self._event_class = event_class
         self._retry = None
@@ -144,6 +164,9 @@ class EventSourceHandler(tornado.web.RequestHandler):
 
     @tornado.web.asynchronous
     def push_keepalive(self):
+        """
+        callback function called by `tornado.ioloop.PeriodicCallback`
+        """
         log.debug("push_keepalive()")
         self.write(": keepalive %s\r\n\r\n" % (unicode(time.time())))
         self.flush()
@@ -151,6 +174,7 @@ class EventSourceHandler(tornado.web.RequestHandler):
     def push(self, event):
         """
         For a given event, write event-source outputs on current handler
+
         :param event: Event based incoming event
         """
         log.debug("push(%s,%s,%s)" % (event.id,event.action,event.value))
@@ -177,6 +201,8 @@ class EventSourceHandler(tornado.web.RequestHandler):
 
     def is_connected(self, target):
         """
+        Tells whether an eventsource channel identified by `target` is opened.
+
         :param target: string identifying a given target
         @return true if target is connected
         """
@@ -188,8 +214,7 @@ class EventSourceHandler(tornado.web.RequestHandler):
 
         :param target: string identifying a given target
 
-        this method will add target to the connected list, 
-        and create an empty event buffer
+        this method will add target to the connected list and create an empty event buffer
         """
         log.debug("set_connected(%s)" % (target,))
         self._connected[self] = target
@@ -199,8 +224,7 @@ class EventSourceHandler(tornado.web.RequestHandler):
         """
         unregisters current handler as being connected
 
-        this method will remove target from the connected list,
-        and delete the event buffer
+        this method will remove target from the connected list and delete the event buffer
         """
         try:
             target = self._connected[self]
@@ -213,8 +237,13 @@ class EventSourceHandler(tornado.web.RequestHandler):
 
     def write_error(self, status_code, **kwargs):
         """
-        overloads the write_error() method of RequestHandler, to
+        Overloads the write_error() method of RequestHandler, to
         support more explicit messages than only the ones from httplib.
+        This will end the current eventsource channel.
+
+        :param status_code: error code to be returned
+        :param mesg: specific message to output (if non-present, httplib error message will be used)
+        :param exc_info: displays exception trace (if debug mode is enabled)
         """
         if self.settings.get("debug") and "exc_info" in kwargs:
             # in debug mode, try to send a traceback
@@ -245,6 +274,9 @@ class EventSourceHandler(tornado.web.RequestHandler):
 
         :param action: string defining the type of event
         :param target: string defining the target handler to send it to
+        :returns: HTTP error 404 if `target` is not connected
+        :returns: HTTP error 404 if `action` is not in Event.ACTIONS
+        :returns: HTTP error 400 if data is not properly formatted.
 
         this method will look for the request body to get post's data.
         """
@@ -258,13 +290,16 @@ class EventSourceHandler(tornado.web.RequestHandler):
             try:
                 self.buffer_event(target,action,self.request.body)
             except ValueError, ve:
-                self.send_error(400,mesg="JSON data is not properly formatted: <br />%s" % (ve,))
+                self.send_error(400,mesg="Data is not properly formatted: <br />%s" % (ve,))
 
     """Asynchronous actions"""
     
     def _event_generator(self,target):
         """
         parses all events buffered for target and yield them
+
+        :param target: string matching the token of a target
+        :yields: each buffered event
         """
         for ev in self._events[target]:
             self._events[target].remove(ev)
@@ -295,7 +330,8 @@ class EventSourceHandler(tornado.web.RequestHandler):
     def get(self,action,target):
         """
         Opens a new event_source connection and wait for events to come
-        Returns error 423 if the target token already exists
+
+        :returns: error 423 if the target token already exists
         Redirects to / if action is not matching Event.LISTEN.
         """
         log.debug("get(%s,%s)" % (target, action))
@@ -323,6 +359,7 @@ class EventSourceHandler(tornado.web.RequestHandler):
 ###
 
 def start():
+    """helper method to create a commandline utility"""
     parser = argparse.ArgumentParser(prog=sys.argv[0],
                             description="Event Source Listener")
     parser.add_argument("-H",

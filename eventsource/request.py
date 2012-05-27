@@ -5,6 +5,12 @@ import json
 import urllib2
 
 def send_json(url, data):
+    """
+    Sends a JSON query to eventsource's URL
+
+    :param url: string url to send to
+    :param data: string data to send to given URL
+    """
     if isinstance(data,str):
         data = json.dumps(json.loads(data))
     else:
@@ -23,6 +29,12 @@ def send_json(url, data):
         return 1
 
 def send_string(url, data):
+    """
+    Sends a string query to eventsource's URL
+
+    :param url: string url to send to
+    :param data: string data to send to given URL
+    """
     try:
         f = urllib2.urlopen(url, data)
         try:
@@ -36,6 +48,7 @@ def send_string(url, data):
         return 1
     
 def start():
+    """helper method to create a commandline utility"""
     parser = argparse.ArgumentParser(prog=sys.argv[0],
                             description="Generates event for Event Source Library")
 

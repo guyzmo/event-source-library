@@ -1,3 +1,11 @@
+"""
+.. module:: listener 
+:platform: Unix
+:synopsis: This module provides an eventsource client based on tornado
+
+.. moduleauthor:: Bernard Pratz <guyzmo@hackable-devices.org>
+
+"""
 import sys
 import time
 import argparse
@@ -9,7 +17,7 @@ from tornado.httpclient import AsyncHTTPClient, HTTPRequest
 
 class Event(object):
     """
-    Defines a received event
+    Contains a received event to be processed
     """
     def __init__(self):
         self.name = None
@@ -20,6 +28,9 @@ class Event(object):
         return "Event<%s,%s,%s>" % (str(self.id), str(self.name), str(self.data.replace('\n','\\n')))
 
 class EventSourceClient(object):
+    """
+    This module opens a new connection to an eventsource server, and wait for events.
+    """
     def __init__(self,url,action,target,callback=None,retry=0):
         """
         Build the event source client
@@ -100,6 +111,8 @@ class EventSourceClient(object):
         """
         Function that gets called on non long-polling actions, 
         on error or on end of polling.
+
+        :param response: tornado's response object that handles connection response data
         """
         if response.error:
             log.error(response.error)
@@ -109,6 +122,7 @@ class EventSourceClient(object):
         IOLoop.instance().stop()
 
 def start():
+    """helper method to create a commandline utility"""
     parser = argparse.ArgumentParser(prog=sys.argv[0],
                             description="Event Source Client")
     parser.add_argument("-H",
