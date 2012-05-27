@@ -15,13 +15,6 @@ eventsource Package
 ===================
 
 .. note::
-resources:
-    - http://stackoverflow.com/questions/10665569/websocket-event-source-implementation-to-expose-a-two-way-rpc-to-a-python-dj
-    - http://stackoverflow.com/questions/8812715/using-a-simple-python-generator-as-a-co-routine-in-a-tornado-async-handler
-    - http://dev.w3.org/html5/eventsource/#event-stream-interpretation
-    - http://github.com/guyzmo/event-source-library/
-    - http://www.tornadoweb.org/
-
 this package installs also three utilities:
     - **eventsource-server** : that helps to create an eventsource server (module `eventsource.listener`)
     - **eventsource-client** : that helps to create an eventsource client (module `eventsource.client`)
@@ -59,6 +52,15 @@ README
 ======
 
 .. literalinclude:: ../README.md
+
+Resources
+=========
+
+    - http://stackoverflow.com/questions/10665569/websocket-event-source-implementation-to-expose-a-two-way-rpc-to-a-python-dj
+    - http://stackoverflow.com/questions/8812715/using-a-simple-python-generator-as-a-co-routine-in-a-tornado-async-handler
+    - http://dev.w3.org/html5/eventsource/
+    - http://github.com/guyzmo/event-source-library/
+    - http://www.tornadoweb.org/
 
 
 Indices and tables
