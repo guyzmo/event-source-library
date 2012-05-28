@@ -86,7 +86,6 @@ class EventId(object):
             EventId.cnt+=1
         return self.cnt
 
-    """Property to encapsulate processing on value"""
     id = property(get_id)
 
 """ Reusable events """
@@ -94,8 +93,8 @@ class EventId(object):
 class StringEvent(Event):
     """
     Class that defines a multiline string Event
-    - overloads `Event.get_value()`, and associates it using a property
-    - adds a "ping" event
+        - overloads `Event.get_value()`, and associates it using a property
+        - adds a "ping" event
     """
     ACTIONS=["ping",Event.FINISH]
     def get_value(self):
@@ -106,9 +105,9 @@ class StringEvent(Event):
 class JSONEvent(Event):
     """
     Class that defines a JSON-checked Event
-    - overloads `Event.get_value()` and `Event.set_value()`, and associates it using a property
-    - adds a "ping" event
-    - defines content_type to `application/json`
+        - overloads `Event.get_value()` and `Event.set_value()`, and associates it using a property
+        - adds a "ping" event
+        - defines content_type to `application/json`
     """
     content_type = "application/json"
 

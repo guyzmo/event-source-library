@@ -9,7 +9,6 @@ Eventsource library for python
 .. toctree::
    :maxdepth: 2
 
-.. note::
 this library installs also three utilities:
     - **eventsource-server** : that helps to create an eventsource server (module `eventsource.listener`)
     - **eventsource-client** : that helps to create an eventsource client (module `eventsource.client`)
