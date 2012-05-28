@@ -51,7 +51,7 @@ This module only connects to listener's rest POST interface to send new events
 README
 ======
 
-.. literalinclude:: ../README.md
+.. include:: ../README.rst
 
 Resources
 =========
