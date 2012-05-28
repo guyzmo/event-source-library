@@ -48,9 +48,6 @@ This module only connects to listener's rest POST interface to send new events
     :members:
     :undoc-members:
 
-README
-======
-
 .. include:: ../README.rst
 
 Resources
