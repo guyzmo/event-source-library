@@ -1,5 +1,5 @@
-Event Source Library for Python
-===============================
+README: Event Source Library for Python
+=======================================
 
 This library implements W3C Draft's on event-source:
     - http://dev.w3.org/html5/eventsource/
