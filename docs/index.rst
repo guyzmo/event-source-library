@@ -3,23 +3,30 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Eventsource library
-===================
-
-Contents:
+Eventsource library for python
+==============================
 
 .. toctree::
    :maxdepth: 2
 
-eventsource Package
-===================
-
 .. note::
-this package installs also three utilities:
+this library installs also three utilities:
     - **eventsource-server** : that helps to create an eventsource server (module `eventsource.listener`)
     - **eventsource-client** : that helps to create an eventsource client (module `eventsource.client`)
     - **eventsource-request** : that helps to send requests to the client through the server (module `eventsource.request`)
 see `--help` or README for more information
+
+Have a look at the README part of this documentation to integrate or extend this library.
+
+eventsource Package
+===================
+
+This library exposes three modules, two of them based on tornado library. The listener module, ran
+by the server, waits for incoming connections. When a client, running the client module, connects
+to the listener, it waits for incoming events from the server. And finally, when the request module
+is ran, it posts events on the server, who forwards them to the client.
+
+The request module relies only on `urllib2`.
 
 :mod:`listener` Module
 ----------------------
