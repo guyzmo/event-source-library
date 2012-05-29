@@ -15,18 +15,13 @@ def send_json(url, data):
         data = json.dumps(json.loads(data))
     else:
         data = json.dumps(data)
+    req = urllib2.Request(url, data, {'Content-Type': 'application/json'})
+    f = urllib2.urlopen(req)
     try:
-        req = urllib2.Request(url, data, {'Content-Type': 'application/json'})
-        f = urllib2.urlopen(req)
-        try:
-            response = f.read()
-            print response
-            return 0
-        finally:
-            f.close()
-    except urllib2.HTTPError, err:
-        print "Unable to send request: %s" % (err,)
-        return 1
+        response = f.read()
+        return response
+    finally:
+        f.close()
 
 def send_string(url, data):
     """
@@ -35,17 +30,12 @@ def send_string(url, data):
     :param url: string url to send to
     :param data: string data to send to given URL
     """
+    f = urllib2.urlopen(url, data)
     try:
-        f = urllib2.urlopen(url, data)
-        try:
-            response = f.read()
-            print response
-            return 0
-        finally:
-            f.close()
-    except urllib2.HTTPError, err:
-        print "Unable to send request: %s" % (err,)
-        return 1
+        response = f.read()
+        return response
+    finally:
+        f.close()
     
 def start():
     """helper method to create a commandline utility"""
@@ -83,10 +73,15 @@ def start():
 
     args = parser.parse_args(sys.argv[1:])
 
-    if args.json:
-        sys.exit( send_json("http://%(host)s:%(port)s/%(action)s/%(token)s" % args.__dict__, args.data) )
-    else:
-        sys.exit( send_string("http://%(host)s:%(port)s/%(action)s/%(token)s" % args.__dict__, args.data) )
+    try:
+        if args.json:
+            print send_json("http://%(host)s:%(port)s/%(action)s/%(token)s" % args.__dict__, args.data)
+        else:
+            print send_string("http://%(host)s:%(port)s/%(action)s/%(token)s" % args.__dict__, args.data)
+        sys.exit(0)
+    except Exception, err:
+        print "Unable to send request: %s" % (err,)
+        sys.exit(1)
 
 if __name__ == "__main__":
     start()
