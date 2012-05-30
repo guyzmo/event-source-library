@@ -36,7 +36,8 @@ setup(name="eventsource",
       author="Bernard Pratz",
       author_email="guyzmo@hackable-devices.org",
       install_requires = [
-          'tornado'
+          'tornado',
+          'pycurl'
       ],
       packages = find_packages(exclude=['examples', 'tests']),
       url='http://packages.python.org/eventsource/',
