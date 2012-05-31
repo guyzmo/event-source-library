@@ -40,6 +40,8 @@ class EventSourceClient(object):
         :param callback: function with one parameter (Event) that gets called for each received event
         :param retry: timeout between two reconnections (0 means no reconnection)
         """
+        log.debug("EventSourceClient(%s,%s,%s,%s,%s)" % (url,action,target,callback,retry))
+        
         self._url = "http://%s/%s/%s" % (url,action,target)
         AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient")
         self.http_client = AsyncHTTPClient()
@@ -58,6 +60,8 @@ class EventSourceClient(object):
         """
         Function to call to start listening
         """
+        log.debug("poll()")
+        
         if self.retry_timeout == 0:
             self.http_client.fetch(self.http_request, self.handle_request)
             IOLoop.instance().start()
@@ -70,6 +74,8 @@ class EventSourceClient(object):
         """
         Function to call to end listening
         """
+        log.debug("end()")
+        
         self.retry_timeout=0
         IOLoop.instance().stop()
     
@@ -80,6 +86,8 @@ class EventSourceClient(object):
 
         parse all the fields and builds an Event object that is passed to the callback function
         """
+        log.debug("handle_stream(...)")
+
         event = Event()
         for line in message.strip('\r\n').split('\r\n'):
             (field, value) = line.split(":",1)
@@ -114,6 +122,8 @@ class EventSourceClient(object):
 
         :param response: tornado's response object that handles connection response data
         """
+        log.debug("handle_request(response=%s)" % (response,))
+        
         if response.error:
             log.error(response.error)
         else:
