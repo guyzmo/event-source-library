@@ -92,7 +92,7 @@ class EventSourceClient(object):
         for line in message.strip('\r\n').split('\r\n'):
             (field, value) = line.split(":",1)
             if field == 'event':
-                event.name = value
+                event.name = value.lstrip()
             elif field == 'data':
                 value = value.lstrip()
                 if event.data is None:
@@ -100,7 +100,7 @@ class EventSourceClient(object):
                 else:
                     event.data = "%s\n%s" % (event.data, value)
             elif field == 'id':
-                event.id = value
+                event.id = value.lstrip()
             elif field == 'retry':
                 try:
                     self.retry_timeout = int(value)
