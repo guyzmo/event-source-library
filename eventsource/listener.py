@@ -156,8 +156,9 @@ class EventSourceHandler(tornado.web.RequestHandler):
         self._event_class = event_class
         self._retry = None
         if keepalive is not 0:
-            self._keepalive = tornado.ioloop.PeriodicCallback(self.push_keepalive, keepalive);
-        
+            self._keepalive = tornado.ioloop.PeriodicCallback(self.push_keepalive, int(keepalive));
+        else:
+            self._keepalive = None
 
     """Tools"""
 
@@ -228,7 +229,8 @@ class EventSourceHandler(tornado.web.RequestHandler):
         try:
             target = self._connected[self]
             log.debug("set_disconnected(%s)" % (target,))
-            self._keepalive.stop()
+            if self._keepalive:
+                self._keepalive.stop()
             del(self._events[target])
             del(self._connected[self])
         except Exception, err:
@@ -343,7 +345,8 @@ class EventSourceHandler(tornado.web.RequestHandler):
                 return
             self.set_connected(target)
             tornado.ioloop.IOLoop.instance().add_callback(self._event_loop)
-            self._keepalive.start()
+            if self._keepalive:
+                self._keepalive.start()
         else:
             self.redirect("/",permanent=True)
         
