@@ -13,6 +13,7 @@ resources:
     - http://github.com/guyzmo/event-source-library/
 """
 
+import os
 import sys
 import time
 import argparse
@@ -22,6 +23,7 @@ log = logging.getLogger("eventsource.listener")
 import json
 import httplib
 import tornado.web
+import tornado.httpserver
 import tornado.ioloop
 
 """Event base"""
@@ -376,6 +378,18 @@ def start():
                         default='8888',
                         help='Port to bind on')
 
+    parser.add_argument("-K",
+                        "--keyfile",
+                        dest="ssl_keyfile",
+                        default='',
+                        help='Path to Key file\nif specified with --certfile, SSL is enabled')
+
+    parser.add_argument("-C",
+                        "--certfile",
+                        dest="ssl_certfile",
+                        default='',
+                        help='Path to CA Cert file\nif specified with --keyfile, SSL is enabled')
+
     parser.add_argument("-d",
                         "--debug",
                         dest="debug",
@@ -429,6 +443,15 @@ def start():
         application = tornado.web.Application([
             (r"/(.*)/(.*)", EventSourceHandler, dict(event_class=chosen_event,keepalive=args.keepalive)),
         ])
+
+        if args.ssl_certfile != '' or args.ssl_keyfile != '':
+            if os.path.exists(args.ssl_certfile) and os.path.exists(args.ssl_keyfile):
+                application = tornado.httpserver.HTTPServer(application, ssl_options={
+                    "certfile": args.ssl_certfile,
+                    "keyfile": args.ssl_keyfile,
+                })
+            else:
+                log.error("[-C|--certfile] and [-K|--keyfile] shall be specified *together* to enable SSL use. SSL is disabled.")
 
         application.listen(int(args.port))
         tornado.ioloop.IOLoop.instance().start()

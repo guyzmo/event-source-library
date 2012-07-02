@@ -31,7 +31,7 @@ class EventSourceClient(object):
     """
     This module opens a new connection to an eventsource server, and wait for events.
     """
-    def __init__(self,url,action,target,callback=None,retry=0):
+    def __init__(self,url,action,target,callback=None,retry=0,ssl=False):
         """
         Build the event source client
         :param url: string, the url to connect to
@@ -42,7 +42,10 @@ class EventSourceClient(object):
         """
         log.debug("EventSourceClient(%s,%s,%s,%s,%s)" % (url,action,target,callback,retry))
         
-        self._url = "http://%s/%s/%s" % (url,action,target)
+        if ssl:
+            self._url = "https://%s/%s/%s" % (url,action,target)
+        else:
+            self._url = "http://%s/%s/%s" % (url,action,target)
         AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient")
         self.http_client = AsyncHTTPClient()
         self.http_request = HTTPRequest(url=self._url,
@@ -147,6 +150,12 @@ def start():
                         default='8888',
                         help='Port to be used connection')
 
+    parser.add_argument("-S",
+                        "--ssl",
+                        dest="ssl",
+                        action="store_true",
+                        help='enables HTTPS scheme support')
+
     parser.add_argument("-d",
                         "--debug",
                         dest="debug",
@@ -177,7 +186,8 @@ def start():
     EventSourceClient(url="%(host)s:%(port)s" % args.__dict__,
                       action="poll",
                       target=args.token,
-                      retry=args.retry).poll()
+                      retry=args.retry,
+                      ssl=args.ssl).poll()
 
     ###
     
