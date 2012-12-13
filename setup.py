@@ -1,7 +1,7 @@
 # setuptools import
 from setuptools import setup, find_packages
 
-import sys, os
+import os
 
 def read(*names):
     values = dict()

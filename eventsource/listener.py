@@ -18,6 +18,8 @@ import sys
 import time
 import argparse
 import logging
+import traceback
+
 log = logging.getLogger("eventsource.listener")
 
 import json
@@ -26,7 +28,7 @@ import tornado.web
 import tornado.httpserver
 import tornado.ioloop
 
-"""Event base"""
+# Event base
 
 class Event(object):
     """
@@ -53,12 +55,12 @@ class Event(object):
     ACTIONS=[FINISH]
 
     def get_value(self):
+        """Property to encapsulate processing on value"""
         return self._value
 
     def set_value(self, v):
         self._value = v
 
-    """Property to encapsulate processing on value"""
     value = property(get_value,set_value)
 
     id = None
@@ -90,7 +92,7 @@ class EventId(object):
 
     id = property(get_id)
 
-""" Reusable events """
+# Reusable events
 
 class StringEvent(Event):
     """
@@ -142,27 +144,25 @@ class JSONIdEvent(JSONEvent,EventId):
     
     id = property(EventId.get_id)
 
-##
-"""EventSource mechanism"""
+# EventSource mechanism
 
 class EventSourceHandler(tornado.web.RequestHandler):
-    _connected = {}
-    _events = {}
-
     def initialize(self, event_class=StringEvent, keepalive=0):
         """
         Takes an Event based class to define the event's handling
         :param event_class: defines the kind of event that is expected
         :param keepalive: time lapse to wait for sending keepalive messages. If `0`, keepalive is deactivated.
         """
+        self._connected = {}
+        self._events = {}
         self._event_class = event_class
         self._retry = None
         if keepalive is not 0:
-            self._keepalive = tornado.ioloop.PeriodicCallback(self.push_keepalive, int(keepalive));
+            self._keepalive = tornado.ioloop.PeriodicCallback(self.push_keepalive, int(keepalive))
         else:
             self._keepalive = None
 
-    """Tools"""
+    # Tools
 
     @tornado.web.asynchronous
     def push_keepalive(self):
@@ -228,6 +228,7 @@ class EventSourceHandler(tornado.web.RequestHandler):
 
         this method will remove target from the connected list and delete the event buffer
         """
+        target = None
         try:
             target = self._connected[self]
             log.debug("set_disconnected(%s)" % (target,))
@@ -269,7 +270,7 @@ class EventSourceHandler(tornado.web.RequestHandler):
                         "message": httplib.responses[status_code],
                         })
 
-    """Synchronous actions"""
+    # Synchronous actions
 
     def post(self,action,target):
         """
@@ -295,7 +296,7 @@ class EventSourceHandler(tornado.web.RequestHandler):
             except ValueError, ve:
                 self.send_error(400,mesg="Data is not properly formatted: <br />%s" % (ve,))
 
-    """Asynchronous actions"""
+    # Asynchronous actions
     
     def _event_generator(self,target):
         """

@@ -180,9 +180,6 @@ def start():
 
     ###
 
-    def log_events(event):
-        log.info( "received %s" % (event,) )
-
     EventSourceClient(url="%(host)s:%(port)s" % args.__dict__,
                       action="poll",
                       target=args.token,
