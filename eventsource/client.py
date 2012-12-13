@@ -96,7 +96,6 @@ class EventSourceClient(object):
         event = Event()
         for line in message.strip().splitlines():
             (field, value) = line.split(":",1)
-            field = field.strip()
             if field == 'event':
                 event.name = value.lstrip()
             elif field == 'data':
@@ -204,11 +203,13 @@ def start():
 
     if not args.port:
         if args.ssl:
-            port = 443
+            port = '443'
         else:
-            port = 80
+            port = '80'
+    else:
+		port = args.port
 
-    EventSourceClient(url="%(host)s:%(port)s" % args.__dict__,
+    EventSourceClient(url="%s:%s" % (args.host, port),
                       action=args.action,
                       target=args.token,
                       retry=args.retry,
