@@ -22,8 +22,8 @@ import traceback
 
 log = logging.getLogger("eventsource.listener")
 
-import json
 import httplib
+from tornado.escape import json_decode, json_encode
 import tornado.web
 import tornado.httpserver
 import tornado.ioloop
@@ -120,10 +120,10 @@ class JSONEvent(Event):
     ACTIONS=["ping",FINISH]
 
     def get_value(self):
-        return [json.dumps(self._value)]
+        return [json_encode(self._value)]
 
     def set_value(self, v):
-        self._value = json.loads(v)
+        self._value = json_decode(v)
 
     value = property(get_value,set_value)
 
