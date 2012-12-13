@@ -94,8 +94,9 @@ class EventSourceClient(object):
         log.debug("handle_stream(...)")
 
         event = Event()
-        for line in message.strip('\r\n').split('\r\n'):
+        for line in message.strip().splitlines():
             (field, value) = line.split(":",1)
+            field = field.strip()
             if field == 'event':
                 event.name = value.lstrip()
             elif field == 'data':
