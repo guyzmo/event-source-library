@@ -31,7 +31,7 @@ class EventSourceClient(object):
     """
     This module opens a new connection to an eventsource server, and wait for events.
     """
-    def __init__(self,url,action,target,callback=None,retry=0,ssl=False):
+    def __init__(self,url,action,target,callback=None,retry=0,ssl=False,user=None,password=None):
         """
         Build the event source client
         :param url: string, the url to connect to
@@ -52,7 +52,9 @@ class EventSourceClient(object):
                                         method='GET',
                                         headers={"content-type":"text/event-stream"},
                                         request_timeout=0,
-                                        streaming_callback=self.handle_stream)
+                                        streaming_callback=self.handle_stream,
+                                        auth_username=user,
+                                        auth_password=password)
         if callback is None:
             self.cb = lambda e: log.info( "received %s" % (e,) )
         else:
@@ -147,7 +149,6 @@ def start():
     parser.add_argument("-P",
                         "--port",
                         dest="port",
-                        default='8888',
                         help='Port to be used connection')
 
     parser.add_argument("-S",
@@ -168,10 +169,27 @@ def start():
                         default='-1',
                         help='Reconnection timeout')
 
+    parser.add_argument("-a",
+                        "--action",
+                        dest="action",
+                        default='poll',
+                        help='The listening action to connect to')
+
+
+    parser.add_argument("-u",
+                        "--user",
+                        dest="user",
+                        help='Username for basic authentication')
+
+    parser.add_argument("-p",
+                        "--password",
+                        dest="password",
+                        help='Password for basic authentication')
+
     parser.add_argument(dest="token",
                         help='Token to be used for connection')
 
-    args = parser.parse_args(sys.argv[1:])
+    args = parser.parse_args()
 
     if args.debug:
         logging.basicConfig(level=logging.DEBUG)
@@ -183,11 +201,19 @@ def start():
     def log_events(event):
         log.info( "received %s" % (event,) )
 
+    if not args.port:
+        if args.ssl:
+            port = 443
+        else:
+            port = 80
+
     EventSourceClient(url="%(host)s:%(port)s" % args.__dict__,
-                      action="poll",
+                      action=args.action,
                       target=args.token,
                       retry=args.retry,
-                      ssl=args.ssl).poll()
+                      ssl=args.ssl,
+                      user=args.user,
+                      password=args.password).poll()
 
     ###
     
