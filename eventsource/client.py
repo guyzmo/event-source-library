@@ -66,11 +66,8 @@ class EventSourceClient(object):
         Function to call to start listening
         """
         log.debug("poll()")
-        
-        if self.retry_timeout == 0:
-            self.http_client.fetch(self.http_request, self.handle_request)
-            IOLoop.instance().start()
-        while self.retry_timeout!=0:
+
+        while self.retry_timeout > -1:
             self.http_client.fetch(self.http_request, self.handle_request)
             IOLoop.instance().start()
             time.sleep(self.retry_timeout/1000)
@@ -81,7 +78,7 @@ class EventSourceClient(object):
         """
         log.debug("end()")
         
-        self.retry_timeout=0
+        self.retry_timeout=-1
         IOLoop.instance().stop()
     
     def handle_stream(self,message):
@@ -129,12 +126,14 @@ class EventSourceClient(object):
         :param response: tornado's response object that handles connection response data
         """
         log.debug("handle_request(response=%s)" % (response,))
-        
-        if response.error:
+
+        if response.code in (200, 500, 502, 503, 504):
+            log.debug("Connection completed, reconnecting")
+        elif response.error:
             log.error(response.error)
         else:
             log.info("disconnection requested")
-            self.retry_timeout=0
+            self.retry_timeout=-1
         IOLoop.instance().stop()
 
 def start():
@@ -167,8 +166,8 @@ def start():
     parser.add_argument("-r",
                         "--retry",
                         dest="retry",
-                        default='-1',
-                        help='Reconnection timeout')
+                        default='0',
+                        help='Reconnection delay (in microseconds)')
 
     parser.add_argument("-a",
                         "--action",
@@ -208,7 +207,7 @@ def start():
         else:
             port = '80'
     else:
-		port = args.port
+        port = args.port
 
     EventSourceClient(url="%s:%s" % (args.host, port),
                       action=args.action,
