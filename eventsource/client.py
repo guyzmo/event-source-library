@@ -206,9 +206,6 @@ def start():
 
     ###
 
-    def log_events(event):
-        log.info( "received %s" % (event,) )
-
     if not args.port:
         if args.ssl:
             port = '443'

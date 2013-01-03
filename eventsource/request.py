@@ -11,7 +11,7 @@ def send_json(url, data):
     :param url: string url to send to
     :param data: string data to send to given URL
     """
-    if isinstance(data,str):
+    if isinstance(data, basestring):
         data = json.dumps(json.loads(data))
     else:
         data = json.dumps(data)
