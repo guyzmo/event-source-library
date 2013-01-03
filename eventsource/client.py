@@ -31,7 +31,7 @@ class EventSourceClient(object):
     """
     This module opens a new connection to an eventsource server, and wait for events.
     """
-    def __init__(self,url,action,target,callback=None,retry=0,ssl=False):
+    def __init__(self,url,action,target,callback=None,retry=0,ssl=False,validate_cert=False):
         """
         Build the event source client
         :param url: string, the url to connect to
@@ -52,6 +52,7 @@ class EventSourceClient(object):
                                         method='GET',
                                         headers={"content-type":"text/event-stream"},
                                         request_timeout=0,
+                                        validate_cert=validate_cert,
                                         streaming_callback=self.handle_stream)
         if callback is None:
             self.cb = lambda e: log.info( "received %s" % (e,) )
@@ -111,7 +112,7 @@ class EventSourceClient(object):
                 except ValueError:
                     pass
             elif field == '':
-                log.info( "received comment: %s" % (value,) )
+                log.debug( "received comment: %s" % (value,) )
             else:
                 raise Exception("Unknown field !")
         if event.name is not None:
@@ -156,6 +157,12 @@ def start():
                         action="store_true",
                         help='enables HTTPS scheme support')
 
+    parser.add_argument("-V",
+                        "--validate-cert",
+                        dest="validate_cert",
+                        action="store_true",
+                        help='Forces HTTPS certificate validation')
+
     parser.add_argument("-d",
                         "--debug",
                         dest="debug",
@@ -187,7 +194,8 @@ def start():
                       action="poll",
                       target=args.token,
                       retry=args.retry,
-                      ssl=args.ssl).poll()
+                      ssl=args.ssl,
+                      validate_cert=args.validate_cert).poll()
 
     ###
     
