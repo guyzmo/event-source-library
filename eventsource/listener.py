@@ -294,6 +294,7 @@ class EventSourceHandler(tornado.web.RequestHandler):
         else:
             try:
                 self.buffer_event(target,action,self.request.body)
+                tornado.ioloop.IOLoop.instance().add_callback(self._event_loop)
             except ValueError, ve:
                 self.send_error(400,mesg="Data is not properly formatted: <br />%s" % (ve,))
 
@@ -328,7 +329,6 @@ class EventSourceHandler(tornado.web.RequestHandler):
                     self.finish()
                     return
                 self.push(event)
-            tornado.ioloop.IOLoop.instance().add_callback(self._event_loop)
 
     @tornado.web.asynchronous
     def get(self,action,target):
@@ -347,7 +347,6 @@ class EventSourceHandler(tornado.web.RequestHandler):
                 self.send_error(423,mesg="Target is already connected")
                 return
             self.set_connected(target)
-            tornado.ioloop.IOLoop.instance().add_callback(self._event_loop)
             if self._keepalive:
                 self._keepalive.start()
         else:
