@@ -16,9 +16,10 @@ resources:
 import os
 import sys
 import time
-import argparse
 import logging
+import argparse
 import traceback
+import collections
 
 log = logging.getLogger("eventsource.listener")
 
@@ -220,7 +221,7 @@ class EventSourceHandler(tornado.web.RequestHandler):
         """
         log.debug("set_connected(%s)" % (target,))
         self._connected[self] = target
-        self._events[target] = []
+        self._events[target] = collections.deque()
 
     def set_disconnected(self):
         """
@@ -305,9 +306,8 @@ class EventSourceHandler(tornado.web.RequestHandler):
         :param target: string matching the token of a target
         :yields: each buffered event
         """
-        for ev in self._events[target]:
-            self._events[target].remove(ev)
-            yield ev
+        while len(self._events[target]) != 0:
+            yield self._events[target].pop()
         
     def _event_loop(self):
         """
