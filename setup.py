@@ -30,7 +30,7 @@ News
 """ % read('README', 'CHANGES')
 
 setup(name="eventsource",
-      version="1.0.4",
+      version="1.0.5",
       description="Event Source Library",
       long_description=long_description,
       author="Bernard Pratz",
