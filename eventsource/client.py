@@ -41,11 +41,15 @@ class EventSourceClient(object):
         :param retry: timeout between two reconnections (0 means no reconnection)
         """
         log.debug("EventSourceClient(%s,%s,%s,%s,%s)" % (url,action,target,callback,retry))
-        
-        if ssl:
-            self._url = "https://%s/%s/%s" % (url,action,target)
-        else:
-            self._url = "http://%s/%s/%s" % (url,action,target)
+
+        self.data_partial = None
+        self.last_event_id = None
+        self.retry_timeout = int(retry)
+        self._url = "%s://%s/%s/%s" % ("https" if ssl else "http", url,action,target)
+        self._headers = {"Accept": "text/event-stream"}
+        self._user = user
+        self._password = password
+
         AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient")
         self.http_client = AsyncHTTPClient()
         self.http_request = HTTPRequest(url=self._url,
@@ -60,20 +64,39 @@ class EventSourceClient(object):
             self.cb = lambda e: log.info( "received %s" % (e,) )
         else:
             self.cb = callback
-        self.retry_timeout = int(retry)
+
+    def _get_headers(self):
+        """
+        Provide headers to be used for next request. By default checks for
+        self.last_event_id and populates a header as needed.
+        """
+        if self.last_event_id:
+            self._headers['Last-Event-ID'] = self.last_event_id
+        return self._headers
+
+    def _get_request(self):
+        """
+        Return a suitablty initialized HTTPRequest
+        """
+        return HTTPRequest(url=self._url,
+                method='GET',
+                headers=self._get_headers(),
+                request_timeout=0,
+                streaming_callback=self.handle_stream,
+                auth_username=self._user,
+                auth_password=self._password)
 
     def poll(self):
         """
         Function to call to start listening
         """
         log.debug("poll()")
-        
-        if self.retry_timeout == 0:
-            self.http_client.fetch(self.http_request, self.handle_request)
+
+        while True:
+            self.http_client.fetch(self._get_request(), self.handle_request)
             IOLoop.instance().start()
-        while self.retry_timeout!=0:
-            self.http_client.fetch(self.http_request, self.handle_request)
-            IOLoop.instance().start()
+            if self.retry_timeout == -1:
+                break
             time.sleep(self.retry_timeout/1000)
 
     def end(self):
@@ -82,7 +105,7 @@ class EventSourceClient(object):
         """
         log.debug("end()")
         
-        self.retry_timeout=0
+        self.retry_timeout=-1
         IOLoop.instance().stop()
     
     def handle_stream(self,message):
@@ -94,10 +117,24 @@ class EventSourceClient(object):
         """
         log.debug("handle_stream(...)")
 
+        if not message.endswith('\n'):
+            log.debug('got partial chunk')
+            if self.data_partial:
+                self.data_partial += message
+            else:
+                self.data_partial = message
+            return
+
+        if self.data_partial:
+            log.debug('rebuiling chunked response')
+            message = self.data_partial + message
+            self.data_partial = None
+
         event = Event()
         for line in message.strip().splitlines():
             (field, value) = line.split(":",1)
             field = field.strip()
+ 
             if field == 'event':
                 event.name = value.lstrip()
             elif field == 'data':
@@ -107,7 +144,7 @@ class EventSourceClient(object):
                 else:
                     event.data = "%s\n%s" % (event.data, value)
             elif field == 'id':
-                event.id = value.lstrip()
+                self.last_event_id = event.id = value.lstrip()
             elif field == 'retry':
                 try:
                     self.retry_timeout = int(value)
@@ -130,12 +167,15 @@ class EventSourceClient(object):
         :param response: tornado's response object that handles connection response data
         """
         log.debug("handle_request(response=%s)" % (response,))
-        
-        if response.error:
+
+        if response.code in (200, 500, 502, 503, 504):
+            log.debug("Connection completed, reconnecting")
+        elif response.error:
             log.error(response.error)
+            self.retry_timeout=-1
         else:
             log.info("disconnection requested")
-            self.retry_timeout=0
+            self.retry_timeout=-1
         IOLoop.instance().stop()
 
 def start():
@@ -174,8 +214,8 @@ def start():
     parser.add_argument("-r",
                         "--retry",
                         dest="retry",
-                        default='-1',
-                        help='Reconnection timeout')
+                        default='0',
+                        help='Reconnection delay (in microseconds)')
 
     parser.add_argument("-a",
                         "--action",
@@ -212,7 +252,7 @@ def start():
         else:
             port = '80'
     else:
-		port = args.port
+        port = args.port
 
     EventSourceClient(url="%s:%s" % (args.host, port),
                       action=args.action,
