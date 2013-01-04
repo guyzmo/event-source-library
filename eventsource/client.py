@@ -144,7 +144,8 @@ class EventSourceClient(object):
                 else:
                     event.data = "%s\n%s" % (event.data, value)
             elif field == 'id':
-                self.last_event_id = event.id = value.lstrip()
+                event.id = value.lstrip()
+                self.last_event_id = event.id
             elif field == 'retry':
                 try:
                     self.retry_timeout = int(value)
