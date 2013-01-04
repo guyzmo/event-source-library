@@ -80,7 +80,7 @@ def start():
             print send_string("http://%(host)s:%(port)s/%(action)s/%(token)s" % args.__dict__, args.data)
         sys.exit(0)
     except Exception, err:
-        print "Unable to send request: %s" % (err,)
+        print "Unable to send request (%s): %s" % (err, err.readline().split("<body>")[-1].split("</body>")[0])
         sys.exit(1)
 
 if __name__ == "__main__":
