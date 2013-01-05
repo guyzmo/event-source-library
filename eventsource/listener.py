@@ -27,7 +27,9 @@ import httplib
 from tornado.escape import json_decode, json_encode
 import tornado.web
 import tornado.httpserver
+import tornado.gen
 import tornado.ioloop
+import toro
 
 # Event base
 
@@ -148,14 +150,15 @@ class JSONIdEvent(JSONEvent,EventId):
 # EventSource mechanism
 
 class EventSourceHandler(tornado.web.RequestHandler):
+    _connected = {}
+    _lock = {}
+    _events = {}
     def initialize(self, event_class=StringEvent, keepalive=0):
         """
         Takes an Event based class to define the event's handling
         :param event_class: defines the kind of event that is expected
         :param keepalive: time lapse to wait for sending keepalive messages. If `0`, keepalive is deactivated.
         """
-        self._connected = {}
-        self._events = {}
         self._event_class = event_class
         self._retry = None
         if keepalive is not 0:
@@ -200,7 +203,9 @@ class EventSourceHandler(tornado.web.RequestHandler):
         :param action: string matching one of Event.ACTIONS
         :param value: string containing a value
         """
-        self._events[target].append(self._event_class(target, action, value))
+        log.debug("buffer_event(%s)" % (target,))
+        self._lock[target].set(self._event_class(target, action, value))
+        self._lock[target]._ready = False # XXX shall be reset on set() call
 
     def is_connected(self, target):
         """
@@ -222,6 +227,7 @@ class EventSourceHandler(tornado.web.RequestHandler):
         log.debug("set_connected(%s)" % (target,))
         self._connected[self] = target
         self._events[target] = collections.deque()
+        self._lock[target] = toro.AsyncResult()
 
     def set_disconnected(self):
         """
@@ -235,6 +241,7 @@ class EventSourceHandler(tornado.web.RequestHandler):
             log.debug("set_disconnected(%s)" % (target,))
             if self._keepalive:
                 self._keepalive.stop()
+            del(self._lock[target])
             del(self._events[target])
             del(self._connected[self])
         except Exception, err:
@@ -294,41 +301,43 @@ class EventSourceHandler(tornado.web.RequestHandler):
         else:
             try:
                 self.buffer_event(target,action,self.request.body)
-                tornado.ioloop.IOLoop.instance().add_callback(self._event_loop)
             except ValueError, ve:
                 self.send_error(400,mesg="Data is not properly formatted: <br />%s" % (ve,))
 
     # Asynchronous actions
     
-    def _event_generator(self,target):
+    def _event_generator(self, target):
         """
         parses all events buffered for target and yield them
 
         :param target: string matching the token of a target
         :yields: each buffered event
         """
+        log.debug("_event_generator(%s)" % (target,))
         while len(self._events[target]) != 0:
             yield self._events[target].pop()
-        
-    def _event_loop(self):
+    
+    def _event_loop(self, event):
         """
         for target matching current handler, gets and forwards all events
         until Event.FINISH is reached, and then closes the channel.
         """
-        if self.is_connected(self.target):
-            for event in self._event_generator(self.target):
-                if self._event_class.RETRY in self._event_class.ACTIONS:
-                    if event.action == self._event_class.RETRY:
-                        try:
-                            self._retry = int(event.value[0])
-                            continue
-                        except ValueError:
-                            log.error("incorrect retry value: %s" % (event.value,))
-                if event.action == self._event_class.FINISH:
-                    self.set_disconnected()
-                    self.finish()
+        log.debug("_event_loop(%s)" % (event.target,))
+        #if self.is_connected(target):
+            #for event in self._event_generator(target):
+        if self._event_class.RETRY in self._event_class.ACTIONS:
+            if event.action == self._event_class.RETRY:
+                try:
+                    self._retry = int(event.value[0])
                     return
-                self.push(event)
+                except ValueError:
+                    log.error("incorrect retry value: %s" % (event.value,))
+        if event.action == self._event_class.FINISH:
+            self.set_disconnected()
+            self.finish()
+            return
+        self.push(event)
+        self._lock[event.target].get(self._event_loop)
 
     @tornado.web.asynchronous
     def get(self,action,target):
@@ -342,13 +351,13 @@ class EventSourceHandler(tornado.web.RequestHandler):
         if action == self._event_class.LISTEN:
             self.set_header("Content-Type", "text/event-stream")
             self.set_header("Cache-Control", "no-cache")
-            self.target = target
             if self.is_connected(target):
                 self.send_error(423,mesg="Target is already connected")
                 return
             self.set_connected(target)
             if self._keepalive:
                 self._keepalive.start()
+            self._lock[target].get(self._event_loop)
         else:
             self.redirect("/",permanent=True)
         

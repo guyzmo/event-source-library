@@ -36,6 +36,7 @@ setup(name="eventsource",
       author="Bernard Pratz",
       author_email="guyzmo@hackable-devices.org",
       install_requires = [
+          'toro',
           'tornado',
           'pycurl'
       ],
