@@ -1,9 +1,12 @@
+# -+- encoding: utf-8 -+-
 """
-.. module:: listener 
+.. module:: listener
 :platform: Unix
 :synopsis: This module provides an eventsource client based on tornado
 
 .. moduleauthor:: Bernard Pratz <guyzmo@hackable-devices.org>
+.. moduleauthor:: Ian Whyman
+.. moduleauthor:: Коренберг Марк
 
 """
 import sys

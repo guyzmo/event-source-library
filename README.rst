@@ -166,7 +166,7 @@ Licensing
 Python Event Source Library
 
 (c) 2012 Bernard Pratz
-(c) 2012 (CKAB) hackable:Devices
+Patches by Ian Whyman and Коренберг Марк
 
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 3 of the License.
 This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
