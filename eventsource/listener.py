@@ -152,7 +152,6 @@ class JSONIdEvent(JSONEvent,EventId):
 class EventSourceHandler(tornado.web.RequestHandler):
     _connected = {}
     _lock = {}
-    _events = {}
     def initialize(self, event_class=StringEvent, keepalive=0):
         """
         Takes an Event based class to define the event's handling
@@ -226,7 +225,6 @@ class EventSourceHandler(tornado.web.RequestHandler):
         """
         log.debug("set_connected(%s)" % (target,))
         self._connected[self] = target
-        self._events[target] = collections.deque()
         self._lock[target] = toro.AsyncResult()
 
     def set_disconnected(self):
@@ -242,7 +240,6 @@ class EventSourceHandler(tornado.web.RequestHandler):
             if self._keepalive:
                 self._keepalive.stop()
             del(self._lock[target])
-            del(self._events[target])
             del(self._connected[self])
         except Exception, err:
             log.error("set_disconnected(%s,%s): %s", str(self), target, err)
@@ -306,25 +303,12 @@ class EventSourceHandler(tornado.web.RequestHandler):
 
     # Asynchronous actions
     
-    def _event_generator(self, target):
-        """
-        parses all events buffered for target and yield them
-
-        :param target: string matching the token of a target
-        :yields: each buffered event
-        """
-        log.debug("_event_generator(%s)" % (target,))
-        while len(self._events[target]) != 0:
-            yield self._events[target].pop()
-    
     def _event_loop(self, event):
         """
         for target matching current handler, gets and forwards all events
         until Event.FINISH is reached, and then closes the channel.
         """
         log.debug("_event_loop(%s)" % (event.target,))
-        #if self.is_connected(target):
-            #for event in self._event_generator(target):
         if self._event_class.RETRY in self._event_class.ACTIONS:
             if event.action == self._event_class.RETRY:
                 try:
