@@ -1,0 +1,25 @@
+version 1.1.0:
+    * syntax clean up
+    * in listener:
+        * removed events buffering as a deque
+        * added toro dependency
+        * added toro.asyncresult to replace event's deque buffer
+        * used toro.asyncresult to block and call the event loop
+    * in client:
+        * added keep alive parameter
+
+version 1.0.5:
+    * moved event_loop callback rearming away
+    * changed events buffer from list to deque
+
+version 1.0.4:
+    * added invalid SSL certificates support
+    * integrated patches from Ian Whyman: 
+        * support of bad HTTP services implementations (be compatible with '\n' and '\r\n')
+        * added user/password support for connections in client
+    * integrated patches from Коренберг Марк:
+        * use of json module of tornado
+        * cosmetic changes
+
+version 1.0.3:
+    * added support for SSL connections
