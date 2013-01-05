@@ -31,7 +31,7 @@ class EventSourceClient(object):
     """
     This module opens a new connection to an eventsource server, and wait for events.
     """
-    def __init__(self,url,action,target,callback=None,retry=0,ssl=False,validate_cert=False,user=None,password=None):
+    def __init__(self,url,action,target,callback=None,retry=0,keep_alive=False,ssl=False,validate_cert=False,user=None,password=None):
         """
         Build the event source client
         :param url: string, the url to connect to
@@ -45,6 +45,7 @@ class EventSourceClient(object):
         self.data_partial = None
         self.last_event_id = None
         self.retry_timeout = int(retry)
+        self.keep_alive = keep_alive
         self._url = "%s://%s/%s/%s" % ("https" if ssl else "http", url,action,target)
         self._headers = {"Accept": "text/event-stream"}
         self._user = user
@@ -173,10 +174,12 @@ class EventSourceClient(object):
             log.debug("Connection completed, reconnecting")
         elif response.error:
             log.error(response.error)
-            self.retry_timeout=-1
+            if not self.keep_alive:
+                self.retry_timeout=-1
         else:
             log.info("disconnection requested")
-            self.retry_timeout=-1
+            if not self.keep_alive:
+                self.retry_timeout=-1
         IOLoop.instance().stop()
 
 def start():
@@ -217,6 +220,12 @@ def start():
                         dest="retry",
                         default='0',
                         help='Reconnection delay (in microseconds)')
+
+    parser.add_argument("-k",
+                        "--keep-reconnecting",
+                        dest="keep_alive",
+                        action="store_true",
+                        help='Keep trying to reconnect on disconnection')
 
     parser.add_argument("-a",
                         "--action",
@@ -259,6 +268,7 @@ def start():
                       action=args.action,
                       target=args.token,
                       retry=args.retry,
+                      keep_alive=args.keep_alive,
                       ssl=args.ssl,
                       validate_cert=args.validate_cert,
                       user=args.user,
