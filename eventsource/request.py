@@ -15,7 +15,7 @@ def send_json(url, data):
         data = json.dumps(json.loads(data))
     else:
         data = json.dumps(data)
-    req = urllib2.Request(url, data, {'Content-Type': 'application/json'})
+    req = urllib2.Request(url, data, {"Content-Type": "application/json"})
     f = urllib2.urlopen(req)
     try:
         response = f.read()
@@ -39,37 +39,37 @@ def send_string(url, data):
     
 def start():
     """helper method to create a commandline utility"""
-    parser = argparse.ArgumentParser(prog=sys.argv[0],
+    parser = argparse.ArgumentParser(prog = sys.argv[0],
                             description="Generates event for Event Source Library")
 
     parser.add_argument("token",
-                        help='Token to be used for connection')
+                        help="Token to be used for connection")
 
     parser.add_argument("action",
-                        help='Action to send')
+                        help="Action to send")
 
     parser.add_argument("data",
-                        nargs='?',
+                        nargs="?",
                         default="",
-                        help='Data to be sent')
+                        help="Data to be sent")
 
     parser.add_argument("-H",
                         "--host",
                         dest="host",
-                        default='127.0.0.1',
-                        help='Host to connect to')
+                        default="127.0.0.1",
+                        help="Host to connect to")
     # PORT ARGUMENT
     parser.add_argument("-P",
                         "--port",
                         dest="port",
-                        default='8888',
-                        help='Port to be used connection')
+                        default="8888",
+                        help="Port to be used connection")
 
     parser.add_argument("-j",
                         "--json",
                         dest="json",
                         action="store_true",
-                        help='Treat data as JSON')
+                        help="Treat data as JSON")
 
     args = parser.parse_args(sys.argv[1:])
 

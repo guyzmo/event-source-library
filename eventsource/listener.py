@@ -19,16 +19,15 @@ import time
 import logging
 import argparse
 import traceback
-import collections
 
 log = logging.getLogger("eventsource.listener")
 
 import httplib
 from tornado.escape import json_decode, json_encode
 import tornado.web
-import tornado.httpserver
 import tornado.gen
 import tornado.ioloop
+import tornado.httpserver
 import toro
 
 # Event base
@@ -64,11 +63,11 @@ class Event(object):
     def set_value(self, v):
         self._value = v
 
-    value = property(get_value,set_value)
+    value = property(get_value, set_value)
 
     id = None
 
-    def __init__(self, target, action, value=None):
+    def __init__(self, target, action, value = None):
         """
         Creates a new Event object with
         :param target: a string matching an open channel
@@ -103,11 +102,11 @@ class StringEvent(Event):
         - overloads `Event.get_value()`, and associates it using a property
         - adds a "ping" event
     """
-    ACTIONS=["ping",Event.FINISH]
+    ACTIONS=["ping", Event.FINISH]
     def get_value(self):
-        return [line for line in self._value.split('\n')]
+        return [line for line in self._value.split("\n")]
 
-    value = property(get_value,Event.set_value)
+    value = property(get_value, Event.set_value)
 
 class JSONEvent(Event):
     """
@@ -120,7 +119,7 @@ class JSONEvent(Event):
 
     LISTEN = "poll"
     FINISH = "close"
-    ACTIONS=["ping",FINISH]
+    ACTIONS=["ping", FINISH]
 
     def get_value(self):
         return [json_encode(self._value)]
@@ -128,22 +127,22 @@ class JSONEvent(Event):
     def set_value(self, v):
         self._value = json_decode(v)
 
-    value = property(get_value,set_value)
+    value = property(get_value, set_value)
 
-class StringIdEvent(StringEvent,EventId):
+class StringIdEvent(StringEvent, EventId):
     """
     Class that defines a Multiline String Event with id generation
     """
-    ACTIONS=["ping",Event.RETRY,Event.FINISH]
+    ACTIONS=["ping", Event.RETRY, Event.FINISH]
 
     id = property(EventId.get_id)
 
-class JSONIdEvent(JSONEvent,EventId):
+class JSONIdEvent(JSONEvent, EventId):
     """
     Class that defines a JSON-checked Event with id generation
     """
     content_type = JSONEvent.content_type
-    ACTIONS=["ping",Event.RETRY,Event.FINISH]
+    ACTIONS=["ping", Event.RETRY, Event.FINISH]
     
     id = property(EventId.get_id)
 
@@ -152,7 +151,7 @@ class JSONIdEvent(JSONEvent,EventId):
 class EventSourceHandler(tornado.web.RequestHandler):
     _connected = {}
     _lock = {}
-    def initialize(self, event_class=StringEvent, keepalive=0):
+    def initialize(self, event_class = StringEvent, keepalive = 0):
         """
         Takes an Event based class to define the event's handling
         :param event_class: defines the kind of event that is expected
@@ -182,7 +181,7 @@ class EventSourceHandler(tornado.web.RequestHandler):
 
         :param event: Event based incoming event
         """
-        log.debug("push(%s,%s,%s)" % (event.id,event.action,event.value))
+        log.debug("push(%s,%s,%s)" % (event.id, event.action, event.value))
         if hasattr(event, "id"):
             self.write("id: %s\r\n" % (unicode(event.id)))
         if self._retry is not None:
@@ -194,7 +193,7 @@ class EventSourceHandler(tornado.web.RequestHandler):
         self.write("\r\n")
         self.flush()
 
-    def buffer_event(self, target, action, value=None):
+    def buffer_event(self, target, action, value = None):
         """
         creates and store an event for the target
 
@@ -256,20 +255,20 @@ class EventSourceHandler(tornado.web.RequestHandler):
         """
         if self.settings.get("debug") and "exc_info" in kwargs:
             # in debug mode, try to send a traceback
-            self.set_header('Content-Type', 'text/plain')
+            self.set_header("Content-Type", "text/plain")
             for line in traceback.format_exception(*kwargs["exc_info"]):
                 self.write(line)
             self.finish()
         else:
-            if 'mesg' in kwargs:
-                self.finish("<html><title>%(code)d: %(message)s</title>" 
+            if "mesg" in kwargs:
+                self.finish("<html><title>%(code)d: %(message)s</title>"
                             "<body>%(code)d: %(mesg)s</body></html>\n" % {
                         "code": status_code,
                         "message": httplib.responses[status_code],
                         "mesg": kwargs["mesg"],
                         })
             else:
-                self.finish("<html><title>%(code)d: %(message)s</title>" 
+                self.finish("<html><title>%(code)d: %(message)s</title>"
                             "<body>%(code)d: %(message)s</body></html>\n" % {
                         "code": status_code,
                         "message": httplib.responses[status_code],
@@ -277,7 +276,7 @@ class EventSourceHandler(tornado.web.RequestHandler):
 
     # Synchronous actions
 
-    def post(self,action,target):
+    def post(self, action, target):
         """
         Triggers an event
 
@@ -289,17 +288,17 @@ class EventSourceHandler(tornado.web.RequestHandler):
 
         this method will look for the request body to get post's data.
         """
-        log.debug("post(%s,%s)" % (target,action))
+        log.debug("post(%s,%s)" % (target, action))
         self.set_header("Accept", self._event_class.content_type)
         if target not in self._connected.values():
-            self.send_error(404,mesg="Target is not connected")
+            self.send_error(404, mesg="Target is not connected")
         elif action not in self._event_class.ACTIONS:
-            self.send_error(404,mesg="Unknown action requested")
+            self.send_error(404, mesg="Unknown action requested")
         else:
             try:
-                self.buffer_event(target,action,self.request.body)
+                self.buffer_event(target, action, self.request.body)
             except ValueError, ve:
-                self.send_error(400,mesg="Data is not properly formatted: <br />%s" % (ve,))
+                self.send_error(400, mesg="Data is not properly formatted: <br />%s" % (ve,))
 
     # Asynchronous actions
     
@@ -324,7 +323,7 @@ class EventSourceHandler(tornado.web.RequestHandler):
         self._lock[event.target].get(self._event_loop)
 
     @tornado.web.asynchronous
-    def get(self,action,target):
+    def get(self, action, target):
         """
         Opens a new event_source connection and wait for events to come
 
@@ -336,15 +335,15 @@ class EventSourceHandler(tornado.web.RequestHandler):
             self.set_header("Content-Type", "text/event-stream")
             self.set_header("Cache-Control", "no-cache")
             if self.is_connected(target):
-                self.send_error(423,mesg="Target is already connected")
+                self.send_error(423, mesg="Target is already connected")
                 return
             self.set_connected(target)
             if self._keepalive:
                 self._keepalive.start()
             self._lock[target].get(self._event_loop)
         else:
-            self.redirect("/",permanent=True)
-        
+            self.redirect("/", permanent = True)
+    
     def on_connection_close(self):
         """
         overloads RequestHandler's on_connection_close to disconnect
@@ -357,62 +356,62 @@ class EventSourceHandler(tornado.web.RequestHandler):
 
 def start():
     """helper method to create a commandline utility"""
-    parser = argparse.ArgumentParser(prog=sys.argv[0],
+    parser = argparse.ArgumentParser(prog = sys.argv[0],
                             description="Event Source Listener")
     parser.add_argument("-H",
                         "--host",
                         dest="host",
-                        default='0.0.0.0',
-                        help='Host to bind on')
+                        default="0.0.0.0",
+                        help="Host to bind on")
     # PORT ARGUMENT
     parser.add_argument("-P",
                         "--port",
                         dest="port",
-                        default='8888',
-                        help='Port to bind on')
+                        default="8888",
+                        help="Port to bind on")
 
     parser.add_argument("-K",
                         "--keyfile",
                         dest="ssl_keyfile",
-                        default='',
-                        help='Path to Key file\nif specified with --certfile, SSL is enabled')
+                        default="",
+                        help="Path to Key file\nif specified with --certfile, SSL is enabled")
 
     parser.add_argument("-C",
                         "--certfile",
                         dest="ssl_certfile",
-                        default='',
-                        help='Path to CA Cert file\nif specified with --keyfile, SSL is enabled')
+                        default="",
+                        help="Path to CA Cert file\nif specified with --keyfile, SSL is enabled")
 
     parser.add_argument("-d",
                         "--debug",
                         dest="debug",
                         action="store_true",
-                        help='enables debug output')
+                        help="enables debug output")
 
     parser.add_argument("-j",
                         "--json",
                         dest="json",
                         action="store_true",
-                        help='to enable JSON Event')
+                        help="to enable JSON Event")
 
     parser.add_argument("-k",
                         "--keepalive",
                         dest="keepalive",
                         default="0",
-                        help='Keepalive timeout')
+                        help="Keepalive timeout")
 
     parser.add_argument("-i",
                         "--id",
                         dest="id",
                         action="store_true",
-                        help='to generate identifiers')
+                        help="to generate identifiers")
 
     args = parser.parse_args(sys.argv[1:])
 
     if args.debug:
-        logging.basicConfig(level=logging.DEBUG)
+        logging.basicConfig(level = logging.DEBUG)
     else:
-        logging.basicConfig(level=logging.INFO)
+        logging.basicConfig(level = logging.INFO)
 
     if args.json:
         if args.id:
@@ -434,10 +433,10 @@ def start():
     ###
     try:
         application = tornado.web.Application([
-            (r"/(.*)/(.*)", EventSourceHandler, dict(event_class=chosen_event,keepalive=args.keepalive)),
+            (r"/(.*)/(.*)", EventSourceHandler, dict(event_class = chosen_event, keepalive = args.keepalive)),
         ])
 
-        if args.ssl_certfile != '' or args.ssl_keyfile != '':
+        if args.ssl_certfile != "" or args.ssl_keyfile != "":
             if os.path.exists(args.ssl_certfile) and os.path.exists(args.ssl_keyfile):
                 application = tornado.httpserver.HTTPServer(application, ssl_options={
                     "certfile": args.ssl_certfile,
