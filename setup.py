@@ -30,14 +30,14 @@ News
 """ % read('README', 'CHANGES')
 
 setup(name="eventsource",
-      version="1.1.0",
+      version="1.1.1",
       description="Event Source Library",
       long_description=long_description,
       author="Bernard Pratz",
       author_email="guyzmo@hackable-devices.org",
       install_requires = [
-          'toro',
-          'tornado',
+          'toro==0.4',
+          'tornado==2.4',
           'pycurl'
       ],
       packages = find_packages(exclude=['examples', 'tests']),
