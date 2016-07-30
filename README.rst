@@ -87,6 +87,32 @@ Command Line arguments
     -P PORT, --port PORT  Port to be used connection
     -j, --json            Treat data as JSON
 
+Install
+-------
+
+You can install it by getting it from pypi::
+
+    pip install event-source-library
+
+or by getting this repository and install it manually::
+
+    python setup.py install
+
+Development
+-----------
+
+To develop, you can use buildout::
+
+    pip install zc.buildout # if you haven't got it
+    buildout
+    ls bin/
+
+Or you can do:
+
+    python setup.py develop
+
+which will deploy the commands globally like an install, but still linked to
+the current sources.
 
 Integrate
 ---------
