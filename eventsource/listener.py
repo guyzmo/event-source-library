@@ -158,7 +158,7 @@ class EventSourceHandler(tornado.web.RequestHandler):
         """
         Takes an Event based class to define the event's handling
         :param event_class: defines the kind of event that is expected
-        :param keepalive: time lapse to wait for sending keepalive messages. If `0`, keepalive is deactivated.
+        :param keepalive: time lapse to wait for sending keepalive messages, in milliseconds. If `0`, keepalive is deactivated.
         """
         self._event_class = event_class
         self._retry = None
@@ -401,7 +401,7 @@ def start():
                         "--keepalive",
                         dest="keepalive",
                         default="0",
-                        help="Keepalive timeout")
+                        help="Keepalive timeout, in milliseconds")
 
     parser.add_argument("-i",
                         "--id",

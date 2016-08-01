@@ -19,21 +19,21 @@ Usage
 
 1. Launch the server::
     
-    eventsource_server -P 8888 -i -k 50000
+    eventsource-server -P 8888 -i -k 50000
 
 2. Launch the client::
 
-    eventsource_client 42:42:42:42:42:42 -r 5000 -P 8888
+    eventsource-client 42:42:42:42:42:42 -r 5000 -P 8888
 
 3. Send requests::
 
-    eventsource_request 42:42:42:42:42:42 ping "42"
-    eventsource_request 42:42:42:42:42:42 close
+    eventsource-request 42:42:42:42:42:42 ping "42"
+    eventsource-request 42:42:42:42:42:42 close
 
 Command Line arguments
 ----------------------
 
-* `eventsource/listener.py` or `eventsource_server`::
+* `eventsource/listener.py` or `eventsource-server`::
 
     usage: eventsource/listener.py [-h] [-H HOST] [-P PORT] [-d]
                                                 [-j] [-k KEEPALIVE] [-i]
@@ -47,10 +47,10 @@ Command Line arguments
     -d, --debug           enables debug output
     -j, --json            to enable JSON Event
     -k KEEPALIVE, --keepalive KEEPALIVE
-                            Keepalive timeout
+                            Keepalive timeout, in milliseconds
     -i, --id              to generate identifiers
 
-* `eventsource/client.py` or `eventsource_client`::
+* `eventsource/client.py` or `eventsource-client`::
 
     usage: eventsource/client.py [-h] [-H HOST] [-P PORT] [-d]
                                             [-r RETRY]
@@ -69,7 +69,7 @@ Command Line arguments
     -r RETRY, --retry RETRY
                             Reconnection timeout
 
-* `eventsource/send_request.py` or `eventsource_request`::
+* `eventsource/send_request.py` or `eventsource-request`::
 
     usage: eventsource/send_request.py [-h] [-H HOST] [-P PORT] [-j]
                                         token action [data]
@@ -134,7 +134,7 @@ where:
 
 * ``PORT`` is an integer for the port to bind to
 
-* ``KEEPALIVE`` is an integer for the timeout between two keepalive messages (to protect from disconnections)
+* ``KEEPALIVE`` is an integer for the timeout between two keepalive messages (to protect from disconnections), in milliseconds
 
 * ``EVENT`` is a eventsource.listener.Event based class, either one you made or 
 
@@ -145,6 +145,8 @@ where:
   * ``eventsource.listener.JSONEvent`` : Each event gets and resends JSON valid strings
 
   * ``eventsource.listener.JSONIdEvent`` : Each event gets and resends JSON valid string, with an unique id for each event
+
+See http://www.tornadoweb.org/en/stable/web.html#application-configuration for more details.
 
 Extend
 ------
@@ -205,7 +207,7 @@ Licensing
     Python Event Source Library
 
     (c) 2012 Bernard Pratz
-    Patches by Ian Whyman and Коренберг Марк
+    Patches by Ian Whyman, Коренберг Марк and Max Suraev
 
     This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 3 of the License.
     This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
