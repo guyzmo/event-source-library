@@ -323,6 +323,7 @@ class EventSourceHandler(tornado.web.RequestHandler):
             self.finish()
             return
         self.push(event)
+        self._lock[event.target]._ready = False
         self._lock[event.target].get(self._event_loop)
 
     @tornado.web.asynchronous
