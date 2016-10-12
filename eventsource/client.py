@@ -236,6 +236,10 @@ def start():
                         default="poll",
                         help="The listening action to connect to")
 
+    parser.add_argument("-x",
+                        "--prefix",
+                        dest="prefix",
+                        help="Use given prefix for URL address. For example -x sse will force connection to http://server:port/sse/ instead of http://server:port/")
 
     parser.add_argument("-u",
                         "--user",
@@ -267,7 +271,12 @@ def start():
     else:
         port = args.port
 
-    EventSourceClient(url="%s:%s" % (args.host, port),
+    if args.prefix:
+        dst = "%s:%s/%s" % (args.host, port, args.prefix)
+    else:
+        dst = "%s:%s" % (args.host, port)
+
+    EventSourceClient(url = dst,
                       action = args.action,
                       target = args.token,
                       retry = args.retry,

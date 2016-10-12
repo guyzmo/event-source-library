@@ -36,7 +36,7 @@ setup(name="eventsource",
       author="Bernard Pratz",
       author_email="guyzmo+github@m0g.net",
       install_requires = [
-          'tornado>=3.0',
+          'tornado>=4.4',
           'pycurl',
       ] + (['future'] if sys.version_info.major == 2 else []),
       packages = find_packages(exclude=['examples', 'tests']),
