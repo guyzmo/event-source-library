@@ -27,11 +27,11 @@ log = logging.getLogger("eventsource.listener")
 
 import httplib
 from tornado.escape import json_decode, json_encode
+from tornado.concurrent import Future
 import tornado.web
 import tornado.gen
 import tornado.ioloop
 import tornado.httpserver
-import toro
 
 # Event base
 
@@ -205,8 +205,7 @@ class EventSourceHandler(tornado.web.RequestHandler):
         :param value: string containing a value
         """
         log.debug("buffer_event(%s)" % (target,))
-        self._lock[target].set(self._event_class(target, action, value))
-        self._lock[target]._ready = False # XXX shall be reset on set() call
+        self._lock[target].set_result(self._event_class(target, action, value))
 
     def is_connected(self, target):
         """
@@ -227,7 +226,7 @@ class EventSourceHandler(tornado.web.RequestHandler):
         """
         log.debug("set_connected(%s)" % (target,))
         self._connected[self] = target
-        self._lock[target] = toro.AsyncResult()
+        self._lock[target] = Future()
 
     def set_disconnected(self):
         """
@@ -305,11 +304,12 @@ class EventSourceHandler(tornado.web.RequestHandler):
 
     # Asynchronous actions
     
-    def _event_loop(self, event):
+    def _event_loop(self, future):
         """
         for target matching current handler, gets and forwards all events
         until Event.FINISH is reached, and then closes the channel.
         """
+        event = future.result()
         log.debug("_event_loop(%s)" % (event.target,))
         if self._event_class.RETRY in self._event_class.ACTIONS:
             if event.action == self._event_class.RETRY:
@@ -323,7 +323,9 @@ class EventSourceHandler(tornado.web.RequestHandler):
             self.finish()
             return
         self.push(event)
-        self._lock[event.target].get(self._event_loop)
+        self._lock[event.target] = Future()
+        self._lock[event.target].add_done_callback(self._event_loop)
+        
 
     @tornado.web.asynchronous
     def get(self, action, target):
@@ -343,7 +345,7 @@ class EventSourceHandler(tornado.web.RequestHandler):
             self.set_connected(target)
             if self._keepalive:
                 self._keepalive.start()
-            self._lock[target].get(self._event_loop)
+            self._lock[target].add_done_callback(self._event_loop)
         else:
             self.redirect("/", permanent = True)
     
