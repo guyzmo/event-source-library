@@ -1,7 +1,7 @@
 # setuptools import
 from setuptools import setup, find_packages
 
-import os
+import os, sys
 
 def read(*names):
     values = dict()
@@ -30,16 +30,16 @@ News
 """ % read('README', 'CHANGES')
 
 setup(name="eventsource",
-      version="1.1.1",
+      version="1.2",
       description="Event Source Library",
       long_description=long_description,
       author="Bernard Pratz",
-      author_email="guyzmo@hackable-devices.org",
+      author_email="guyzmo+github@m0g.net",
       install_requires = [
           'toro==0.4',
           'tornado==2.4',
-          'pycurl'
-      ],
+          'pycurl',
+      ] + (['future'] if sys.version_info.major == 2 else []),
       packages = find_packages(exclude=['examples', 'tests']),
       url='http://packages.python.org/eventsource/',
       include_package_data=True,
