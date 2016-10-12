@@ -16,6 +16,8 @@ resources:
     - http://github.com/guyzmo/event-source-library/
 """
 
+from __future__ import unicode_literals, print_function
+
 import os
 import sys
 import time
@@ -25,7 +27,10 @@ import traceback
 
 log = logging.getLogger("eventsource.listener")
 
-import httplib
+if sys.version_info.major == 3:
+    import http.client as httplib
+else:
+    import httplib
 from tornado.escape import json_decode, json_encode
 from tornado.concurrent import Future
 import tornado.web
@@ -175,7 +180,7 @@ class EventSourceHandler(tornado.web.RequestHandler):
         callback function called by `tornado.ioloop.PeriodicCallback`
         """
         log.debug("push_keepalive()")
-        self.write(": keepalive %s\r\n\r\n" % (unicode(time.time())))
+        self.write(": keepalive {}\r\n\r\n".format(str(time.time())))
         self.flush()
 
     def push(self, event):
@@ -184,15 +189,15 @@ class EventSourceHandler(tornado.web.RequestHandler):
 
         :param event: Event based incoming event
         """
-        log.debug("push(%s,%s,%s)" % (event.id, event.action, event.value))
+        log.debug("push({},{},{})".format(event.id, event.action, event.value))
         if hasattr(event, "id"):
-            self.write("id: %s\r\n" % (unicode(event.id)))
+            self.write("id: {}\r\n".format(str(event.id)))
         if self._retry is not None:
-            self.write("retry: %s\r\n" % (unicode(self._retry)))
+            self.write("retry: {}\r\n".format(str(self._retry)))
             self._retry = None
-        self.write("event: %s\r\n" % (unicode(event.action)))
+        self.write("event: {}\r\n".format(str(event.action)))
         for line in event.value:
-            self.write("data: %s\r\n" % (unicode(line),))
+            self.write("data: {}\r\n".format(str(line)))
         self.write("\r\n")
         self.flush()
 
@@ -204,7 +209,7 @@ class EventSourceHandler(tornado.web.RequestHandler):
         :param action: string matching one of Event.ACTIONS
         :param value: string containing a value
         """
-        log.debug("buffer_event(%s)" % (target,))
+        log.debug("buffer_event({})".format(target))
         self._lock[target].set_result(self._event_class(target, action, value))
 
     def is_connected(self, target):
@@ -224,7 +229,7 @@ class EventSourceHandler(tornado.web.RequestHandler):
 
         this method will add target to the connected list and create an empty event buffer
         """
-        log.debug("set_connected(%s)" % (target,))
+        log.debug("set_connected({})".format(target))
         self._connected[self] = target
         self._lock[target] = Future()
 
@@ -237,22 +242,22 @@ class EventSourceHandler(tornado.web.RequestHandler):
         target = None
         try:
             target = self._connected[self]
-            log.debug("set_disconnected(%s)" % (target,))
+            log.debug("set_disconnected({})".format(target))
             if self._keepalive:
                 self._keepalive.stop()
             del(self._lock[target])
             del(self._connected[self])
-        except Exception, err:
-            log.error("set_disconnected(%s,%s): %s", str(self), target, err)
+        except Exception as err:
+            log.error("set_disconnected({},{}): {}", str(self), target, err)
 
     def write_error(self, status_code, **kwargs):
         """
         Overloads the write_error() method of RequestHandler, to
-        support more explicit messages than only the ones from httplib.
+        support more explicit messages than only the ones from http.client.
         This will end the current eventsource channel.
 
         :param status_code: error code to be returned
-        :param mesg: specific message to output (if non-present, httplib error message will be used)
+        :param mesg: specific message to output (if non-present, http.client error message will be used)
         :param exc_info: displays exception trace (if debug mode is enabled)
         """
         if self.settings.get("debug") and "exc_info" in kwargs:
@@ -264,17 +269,17 @@ class EventSourceHandler(tornado.web.RequestHandler):
         else:
             if "mesg" in kwargs:
                 self.finish("<html><title>%(code)d: %(message)s</title>"
-                            "<body>%(code)d: %(mesg)s</body></html>\n" % {
-                        "code": status_code,
-                        "message": httplib.responses[status_code],
-                        "mesg": kwargs["mesg"],
-                        })
+                            "<body>%(code)d: %(mesg)s</body></html>\n".format(
+                                code=status_code,
+                                message=httplib.responses[status_code],
+                                mesg=kwargs["mesg"],
+                                ))
             else:
                 self.finish("<html><title>%(code)d: %(message)s</title>"
-                            "<body>%(code)d: %(message)s</body></html>\n" % {
-                        "code": status_code,
-                        "message": httplib.responses[status_code],
-                        })
+                            "<body>%(code)d: %(message)s</body></html>\n".format(
+                                code=status_code,
+                                message=httplib.responses[status_code],
+                                ))
 
     # Synchronous actions
 
@@ -290,17 +295,17 @@ class EventSourceHandler(tornado.web.RequestHandler):
 
         this method will look for the request body to get post's data.
         """
-        log.debug("post(%s,%s)" % (target, action))
+        log.debug("post({},{})".format(target, action))
         self.set_header("Accept", self._event_class.content_type)
-        if target not in self._connected.values():
+        if target not in list(self._connected.values()):
             self.send_error(404, mesg="Target is not connected")
         elif action not in self._event_class.ACTIONS:
             self.send_error(404, mesg="Unknown action requested")
         else:
             try:
                 self.buffer_event(target, action, self.request.body)
-            except ValueError, ve:
-                self.send_error(400, mesg="Data is not properly formatted: <br />%s" % (ve,))
+            except ValueError as ve:
+                self.send_error(400, mesg="Data is not properly formatted: <br />{}".format(ve))
 
     # Asynchronous actions
     
@@ -310,14 +315,14 @@ class EventSourceHandler(tornado.web.RequestHandler):
         until Event.FINISH is reached, and then closes the channel.
         """
         event = future.result()
-        log.debug("_event_loop(%s)" % (event.target,))
+        log.debug("_event_loop({})".format(event.target))
         if self._event_class.RETRY in self._event_class.ACTIONS:
             if event.action == self._event_class.RETRY:
                 try:
                     self._retry = int(event.value[0])
                     return
                 except ValueError:
-                    log.error("incorrect retry value: %s" % (event.value,))
+                    log.error("incorrect retry value: {}".format(event.value))
         if event.action == self._event_class.FINISH:
             self.set_disconnected()
             self.finish()
@@ -335,7 +340,7 @@ class EventSourceHandler(tornado.web.RequestHandler):
         :returns: error 423 if the target token already exists
         Redirects to / if action is not matching Event.LISTEN.
         """
-        log.debug("get(%s,%s)" % (target, action))
+        log.debug("get({},{})".format(target, action))
         if action == self._event_class.LISTEN:
             self.set_header("Content-Type", "text/event-stream")
             self.set_header("Cache-Control", "no-cache")
@@ -453,7 +458,7 @@ def start():
         application.listen(int(args.port))
         tornado.ioloop.IOLoop.instance().start()
     except ValueError:
-        log.error("The port '%d' shall be a numerical value." % (args.port,))
+        log.error("The port '%d' shall be a numerical value.".format(args.port))
         sys.exit(1)
 
     ###
