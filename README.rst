@@ -27,8 +27,8 @@ Usage
 
 3. Send requests::
 
-    eventsource-request 42:42:42:42:42:42 ping "42" -P 8888
-    eventsource-request 42:42:42:42:42:42 close -P 8888
+    eventsource-request 42:42:42:42:42:42 ping "42"
+    eventsource-request 42:42:42:42:42:42 close
 
 Command Line arguments
 ----------------------
